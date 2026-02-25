@@ -22,61 +22,6 @@ name:     kebab-case，簡短明確
 ext:      .md / .txt
 ```
 
----
-
-## Repo 結構
-
-```
-fleet-command/
-│
-├── README.md
-│
-├── arch-portfolio-master.md            ← 六專案總架構 + 整合策略
-│
-├── specs/
-│   ├── spec-cardsense.md               ← 信用卡推薦 API（最高優先）
-│   ├── spec-rta.md                     ← Google 評論信任度分析
-│   ├── spec-seedcraft.md               ← 台灣家庭教育 LINE 平台
-│   ├── spec-techtrend.md               ← B2B 技術週刊訂閱
-│   ├── spec-smartchoice.md             ← 日常決策 AI 輔助
-│   └── spec-fridgemanager.md           ← 家庭食材管理 + 食譜推薦
-│
-├── techtrend/
-│   ├── prompt-weekly-briefing.md       ← 13 個 Prompt 模板
-│   ├── ref-ai-landscape-2026.md        ← NB1 AI 產業全景
-│   ├── ref-ai-landscape-links.md       ← NB1 URL + 摘要說明（維護用）
-│   └── urls/
-│       ├── url-nb1-ai.txt              ← NB1 純 URL（145 條）
-│       ├── url-nb2-frameworks.txt      ← NB2 純 URL（70 條）
-│       ├── url-nb3-devops.txt          ← NB3 純 URL（78 條）
-│       └── url-nb4-commercial.txt      ← NB4 純 URL（82 條）
-│
-└── .gitignore
-```
-
----
-
-## 檔案改名對照
-
-| 舊名 | 新名 |
-|------|------|
-| Portfolio-Master-Architecture.md | arch-portfolio-master.md |
-| CardSense-Spec.md | specs/spec-cardsense.md |
-| RTA-Spec.md | specs/spec-rta.md |
-| SEEDCRAFT-Spec.md | specs/spec-seedcraft.md |
-| TechTrend-Briefing-Spec.md | specs/spec-techtrend.md |
-| SmartChoice-Spec.md | specs/spec-smartchoice.md |
-| FridgeManager-Spec.md | specs/spec-fridgemanager.md |
-| NotebookLM-Weekly-Briefing-Prompts.md | techtrend/prompt-weekly-briefing.md |
-| AI-Industry-Landscape-2026.md | techtrend/ref-ai-landscape-2026.md |
-| AI-Landscape-Links-for-NotebookLM.md | techtrend/ref-ai-landscape-links.md |
-| AI-Links-URLs-Only.txt | techtrend/urls/url-nb1-ai.txt |
-| NB2-Dev-Frameworks-URLs.txt | techtrend/urls/url-nb2-frameworks.txt |
-| NB3-DevOps-Infra-URLs.txt | techtrend/urls/url-nb3-devops.txt |
-| NB4-Commercial-Product-URLs.txt | techtrend/urls/url-nb4-commercial.txt |
-
----
-
 ## 專案總覽
 
 | 專案 | 定位 | 技術棧 | 狀態 |
