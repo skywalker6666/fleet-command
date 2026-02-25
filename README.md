@@ -1,2 +1,146 @@
-# fleet-command
-side project fleet command for me
+# Fleet Command（專案艦隊指揮中心）
+
+六個 side project 的統一規格書庫 — 架構文件、專案 Spec、TechTrend 知識庫來源。
+
+> 所有專案以商業化為最終目標。各 Spec 均包含版權/IP 風險評估。
+
+---
+
+## 命名規則
+
+```
+{category}-{name}.{ext}
+
+category:
+  spec-    專案規格書
+  arch-    架構文件
+  prompt-  Prompt 模板
+  url-     NotebookLM 來源 URL（純 URL，一行一條）
+  ref-     參考資料（說明文件、全景分析）
+
+name:     kebab-case，簡短明確
+ext:      .md / .txt
+```
+
+---
+
+## Repo 結構
+
+```
+fleet-command/
+│
+├── README.md
+│
+├── arch-portfolio-master.md            ← 六專案總架構 + 整合策略
+│
+├── specs/
+│   ├── spec-cardsense.md               ← 信用卡推薦 API（最高優先）
+│   ├── spec-rta.md                     ← Google 評論信任度分析
+│   ├── spec-seedcraft.md               ← 台灣家庭教育 LINE 平台
+│   ├── spec-techtrend.md               ← B2B 技術週刊訂閱
+│   ├── spec-smartchoice.md             ← 日常決策 AI 輔助
+│   └── spec-fridgemanager.md           ← 家庭食材管理 + 食譜推薦
+│
+├── techtrend/
+│   ├── prompt-weekly-briefing.md       ← 13 個 Prompt 模板
+│   ├── ref-ai-landscape-2026.md        ← NB1 AI 產業全景
+│   ├── ref-ai-landscape-links.md       ← NB1 URL + 摘要說明（維護用）
+│   └── urls/
+│       ├── url-nb1-ai.txt              ← NB1 純 URL（145 條）
+│       ├── url-nb2-frameworks.txt      ← NB2 純 URL（70 條）
+│       ├── url-nb3-devops.txt          ← NB3 純 URL（78 條）
+│       └── url-nb4-commercial.txt      ← NB4 純 URL（82 條）
+│
+└── .gitignore
+```
+
+---
+
+## 檔案改名對照
+
+| 舊名 | 新名 |
+|------|------|
+| Portfolio-Master-Architecture.md | arch-portfolio-master.md |
+| CardSense-Spec.md | specs/spec-cardsense.md |
+| RTA-Spec.md | specs/spec-rta.md |
+| SEEDCRAFT-Spec.md | specs/spec-seedcraft.md |
+| TechTrend-Briefing-Spec.md | specs/spec-techtrend.md |
+| SmartChoice-Spec.md | specs/spec-smartchoice.md |
+| FridgeManager-Spec.md | specs/spec-fridgemanager.md |
+| NotebookLM-Weekly-Briefing-Prompts.md | techtrend/prompt-weekly-briefing.md |
+| AI-Industry-Landscape-2026.md | techtrend/ref-ai-landscape-2026.md |
+| AI-Landscape-Links-for-NotebookLM.md | techtrend/ref-ai-landscape-links.md |
+| AI-Links-URLs-Only.txt | techtrend/urls/url-nb1-ai.txt |
+| NB2-Dev-Frameworks-URLs.txt | techtrend/urls/url-nb2-frameworks.txt |
+| NB3-DevOps-Infra-URLs.txt | techtrend/urls/url-nb3-devops.txt |
+| NB4-Commercial-Product-URLs.txt | techtrend/urls/url-nb4-commercial.txt |
+
+---
+
+## 專案總覽
+
+| 專案 | 定位 | 技術棧 | 狀態 |
+|------|------|--------|------|
+| **CardSense** | 信用卡推薦 API（確定性規則引擎） | Java 21 / Spring Boot / PostgreSQL | Sprint 0 ✅ |
+| **ReviewTrustAnalyzer** | Google Maps 評論信任度分析 | Python / FastAPI / pgvector | V1 ✅ |
+| **SEEDCRAFT** | LINE-first 家庭教育教練 | Python / FastAPI / LINE SDK / Next.js | Rebrand ✅ |
+| **TechTrend** | B2B 技術週刊（NotebookLM → SaaS） | Next.js / OpenClaw / Stripe | Spec ✅ |
+| **SmartChoice** | 日常決策 AI 輔助（今天吃什麼） | Next.js PWA / Google Maps API | 規劃中 |
+| **FridgeManager** | 食材管理 + 到期提醒 + AI 食譜 | Next.js PWA / Web Push / Open Food Facts | 規劃中 |
+
+---
+
+## 開發優先序
+
+```
+1️⃣ CardSense     — Sprint 1 開發中（最高商業價值）
+2️⃣ RTA           — V1 → custom model + Agent SDK
+3️⃣ SEEDCRAFT     — LINE MVP 開發
+4️⃣ TechTrend     — 週刊生產 + 訂閱成長
+5️⃣ SmartChoice   — Spec → Sprint 1
+6️⃣ FridgeManager — Spec → Sprint 1（可與 SmartChoice 平行）
+```
+
+---
+
+## 跨專案整合（高價值路徑）
+
+```
+SmartChoice → CardSense    推薦餐廳 → 最優付款卡
+SmartChoice → RTA          推薦地點 → 評論信任度驗證
+FridgeManager → SmartChoice 食材快過期 → 今天煮什麼
+FridgeManager → CardSense   採購清單 → 超市最優卡
+SEEDCRAFT → RTA            補習班推薦 → 評論可信度
+```
+
+---
+
+## 與各專案 Code Repo 的關係
+
+本 repo 存放**規格書和知識庫文件**。各專案程式碼在獨立 repo：
+
+| Repo | 內容 | Spec | 狀態 |
+|------|------|------|------|
+| [cardsense-contracts](https://github.com/skywalker6666/cardsense-contracts) | 共用資料模型 | §4 | |
+| [cardsense-extractor](https://github.com/skywalker6666/cardsense-extractor) | 銀行爬蟲 + LLM 解析 | §3 | |
+| [cardsense-api](https://github.com/skywalker6666/cardsense-api) | 推薦 API | §4-5 | |
+| [review-trust-analyzer](https://github.com/skywalker6666/review-trust-analyzer) | 混合評分系統 | spec-rta | |
+| [seedcraft](https://github.com/skywalker6666/seedcraft) | LINE Bot + LIFF | spec-seedcraft | |
+| [techtrend](https://github.com/skywalker6666/techtrend) | B2B 技術週刊 | spec-techtrend | 待建 |
+| [smartchoice](https://github.com/skywalker6666/smartchoice) | 日常決策 AI | spec-smartchoice | 待建 |
+| [fridgemanager](https://github.com/skywalker6666/fridgemanager) | 食材管理 | spec-fridgemanager | 待建 |
+
+更新流程：**改 spec → commit to portfolio-docs → 對應 code repo 跟進實作**。
+
+---
+
+## Claude Project Knowledge 同步
+
+本 repo 同時作為 Claude Project Knowledge 的 source of truth。  
+更新 spec 後記得同步上傳到 Claude Project。
+
+未來可用 GitHub Action 自動化：push → 觸發 Claude API 更新 Project Knowledge。
+
+---
+
+*Maintained by Alan | Last updated: 2026-02-25*
