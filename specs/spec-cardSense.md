@@ -1,12 +1,12 @@
 # CardSense — 完整專案規格說明書
-### Version 1.0 | 2026-02-25
+### Version 1.1 | 2026-03-27
 
 ---
 
 ## 1. 專案概述
 
 ### 1.1 一句話定位
-**確定性信用卡推薦 API：將銀行促銷文字轉化為結構化數據，用規則邏輯而非 LLM 產生可審計的刷卡建議。**
+**確定性信用卡推薦平台：將銀行促銷文字轉化為結構化數據，用規則邏輯而非 LLM 產生可審計的刷卡建議，並透過 `/calc` 社群入口把陌生流量導入完整推薦與卡片目錄。**
 
 ### 1.2 問題陳述
 台灣消費者持有多張信用卡（平均 3-5 張），每張卡在不同通路、時段、門檻有不同回饋。現有比較平台（Money101、卡優）提供的是靜態文章式比較，無法根據用戶「當下消費場景」即時推薦最佳卡片。更大的問題是：銀行優惠經常更新，手動追蹤成本極高。
@@ -16,6 +16,7 @@
 1. **Extractor**：半自動從銀行官網抓取優惠文字，用 LLM（離線）轉為結構化資料
 2. **Contracts**：定義跨 repo 共用的資料結構和 API 契約
 3. **API**：接收消費場景，用確定性規則匹配最佳卡片，回傳可審計的推薦理由
+4. **Frontend Surfaces**：用完整推薦頁 `/`、卡片目錄 `/cards`、社群入口 `/calc` 承接 B2C 查詢、瀏覽與傳播
 
 ### 1.4 為什麼刻意不用 LLM
 | 考量 | 說明 |
@@ -36,6 +37,16 @@
 | **B2B：記帳軟體** | 整合方 | 消費後顯示「你該用哪張卡」 | 高 |
 | **B2C：比較網站** | 直接用戶 | 查詢當前最佳刷卡方案 | 中（Freemium） |
 | **B2B2C：聯盟行銷** | 流量方 | 導流到銀行申卡頁賺佣金 | — (revenue share) |
+
+### 1.6 產品入口與頁面分工
+
+| 路徑 | 角色 | 目標 | 主要依賴 |
+|------|------|------|----------|
+| `/calc` | 社群傳播入口 | 用「刷錯卡的年度損失」製造痛感，提升分享率與導流率 | `GET /v1/cards`、`POST /v1/recommendations/card` |
+| `/` | 完整推薦工具 | 讓用戶完成當下消費決策，顯示完整推薦理由與優惠細節 | `POST /v1/recommendations/card` |
+| `/cards` | 卡片目錄 | 提供卡片瀏覽、篩選與申辦入口 | `GET /v1/cards` |
+
+> `/calc` 的詳細互動、SEO、分享與元件規格，另見 `fleet-command/CardSense-Demo-Spec.md`，主規格只保留產品定位、KPI 與系統邊界。
 
 ---
 
@@ -74,6 +85,15 @@ Revenue Streams
 | B2B Clients | 付費 API 客戶數 | 3 |
 | MRR | 月經常性收入 | $200 |
 
+### 2.2.1 B2C 傳播漏斗（`/calc`）
+
+| 指標 | 定義 | Phase 2 目標 |
+|------|------|-------------|
+| 計算完成率 | `calc_submit / calc_page_view` | > 60% |
+| 分享率 | `calc_share / calc_result` | > 10% |
+| 跳轉推薦頁率 | `calc_cta_click(recommend) / calc_result` | > 30% |
+| 社群來源流量 | 帶 `ref` 參數的 `/calc` page view | 追蹤即可 |
+
 ### 2.3 成本結構 (MVP)
 
 | 項目 | 月成本 | 備註 |
@@ -90,8 +110,8 @@ Revenue Streams
 |------|------|------|----------|
 | Phase 0 (✅完成) | Sprint 0 | 3-repo 架構、contracts 定義 | ✅ |
 | Phase 1 | Month 1-2 | 5 家銀行資料、API MVP 上線 | 能穩定回傳推薦 |
-| Phase 2 | Month 3-4 | 10 家銀行、3 個 B2B 客戶 | 有人願意付費 |
-| Phase 3 | Month 5-8 | $500 MRR、聯盟行銷上線 | 持續增長 |
+| Phase 2 | Month 3-4 | 10 家銀行、3 個 B2B 客戶、完整推薦頁穩定 | 有人願意付費 |
+| Phase 3 | Month 5-8 | $500 MRR、聯盟行銷上線、`/calc` 社群入口導流 | 持續增長 |
 | Phase 4 | Month 9+ | $2K MRR、數據洞察產品 | — |
 
 ---
@@ -130,6 +150,12 @@ GitHub Organization
     ├── 依賴: cardsense-contracts
     └── 部署: Railway
 ```
+
+### 3.1.1 Frontend Delivery Surface
+
+- `cardsense-web` 作為獨立前端 repo，承接 `/`、`/cards`、`/calc` 三個主要路由。
+- `/calc` 明確不新增 API endpoint、不新增資料庫表，僅重用既有 `GET /v1/cards` 與 `POST /v1/recommendations/card`。
+- `/calc` 的年度損失、分享圖片、CTA 導流與追蹤埋點皆屬前端責任，不改動 contracts 或 extractor 邊界。
 
 ### 3.2 資料流
 

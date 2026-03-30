@@ -52,7 +52,7 @@ CardSense 是一個以**情境式卡片比較**為核心的信用卡推薦平台
 | cardsense-contracts | ✅ 完成 | Promotion / Recommendation / Stackability schema 穩定，結構化 conditions |
 | cardsense-extractor | ✅ 核心完成 | E.SUN + Cathay + TAISHIN + FUBON + CTBC real extractor、JSONL + SQLite 匯入、refresh_and_deploy 一鍵流程 |
 | cardsense-api | ✅ 核心完成 + 已部署 | 情境推薦、疊加優惠計算（已移除雙模式）、break-even、scope 過濾、eligibilityType 過濾、平台/通路 condition 匹配、stackability 解析；Railway 上線 |
-| cardsense-web | ✅ MVP 完成 + 已部署 | 推薦表單 + 卡片目錄（101 張卡）+ 多維篩選標籤 + 卡片優惠顯示 + 深色模式 + RWD + fintech UI；Vercel 上線 |
+| cardsense-web | ✅ MVP 完成 + 已部署 | 推薦表單 + 卡片目錄（101 張卡）+ 多維篩選標籤 + 卡片優惠顯示 + 深色模式 + RWD + fintech UI；下一個 slice 為 `/calc` 社群入口頁 |
 | 資料庫遷移 | ⏳ 規劃中 | SQLite → Supabase，待觸發條件（見 Phase 3） |
 | 銀行擴充 | 🔄 進行中 | TAISHIN ✅ FUBON ✅ CTBC ✅ 完成（5 銀行 101 張卡 452 筆優惠）、下一批：MEGA / SINOPAC |
 | Auth / Rate Limiting | ⏳ 未開始 | Phase 2 商業化時實作 |
@@ -95,6 +95,12 @@ CardSense 是一個以**情境式卡片比較**為核心的信用卡推薦平台
 - 行動裝置 RWD 最佳化
 - Fintech 風格 UI（OKLCH 語意色彩 token）
 - API 連線狀態指示
+
+**下一個前端 slice（已定 spec）**：
+- `/calc` 作為社群傳播入口，用「刷錯卡的年度損失」切入陌生流量
+- 不新增 API endpoint，重用 `GET /v1/cards` 與 `POST /v1/recommendations/card`
+- 結果頁聚焦 best vs worst 差額、年度損失、分享按鈕與 CTA 導流到 `/` / `/cards`
+- 詳細規格收斂於 `CardSense-Demo-Spec.md`
 
 **技術棧**：React 19 / TypeScript 5.9 / Vite 8 / TailwindCSS 4 / React Router 7 / TanStack Query 5 / Radix UI + shadcn/ui / Lucide
 
@@ -272,6 +278,7 @@ taxonomy/      → category / channel / frequency taxonomy
 
 **前提**：Phase 1 達到 5 家銀行 + 前端穩定。
 
+- `cardsense-web` 新增 `/calc` 傳播入口頁，驗證分享率與推薦頁導流率
 - API Key 認證 + Rate Limiting
 - 免責聲明 + 聯盟行銷連結揭露
 - B2B 客戶 onboarding 流程
@@ -372,9 +379,10 @@ npm run dev                                       # http://localhost:5173
 - [cardsense-extractor](https://github.com/WaddleStudio/cardsense-extractor) — 資料擷取 pipeline、5 銀行 extractor、SQLite 匯入
 - [cardsense-api](https://github.com/WaddleStudio/cardsense-api) — 推薦 API、比較模式、break-even 分析、Postman collection
 - [cardsense-web](https://github.com/WaddleStudio/cardsense-web) — 前端展示、推薦表單、卡片目錄、深色模式
+- [CardSense Demo Spec](./CardSense-Demo-Spec.md) — `/calc` 社群入口頁詳細規格
 - [CardSense Spec](./specs/spec-cardSense.md) — 完整專案規格說明書
 - [推薦引擎增強設計](./specs/cardsense-plans/2026-03-28-recommendation-enhancement-design.md) — 六項增強設計文件
 - [推薦引擎增強實作計畫](./specs/cardsense-plans/2026-03-28-recommendation-enhancement-impl.md) — 10-task 實作計畫
 - [API Implementation Checklist](https://github.com/WaddleStudio/cardsense-api/blob/master/IMPLEMENTATION_CHECKLIST.md) — API 待辦與遷移時機
 
-*Last updated: 2026-03-28*
+*Last updated: 2026-03-30*
