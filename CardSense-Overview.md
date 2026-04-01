@@ -37,10 +37,11 @@ CardSense 是一個以**情境式卡片比較**為核心的信用卡推薦平台
 |------|------|------|
 | cardsense-contracts | ✅ 完成 | Promotion / Recommendation schema 穩定，含 Stackability metadata |
 | cardsense-extractor | ✅ 核心完成 | 5 家銀行 real extractor（E.SUN / Cathay / Taishin / Fubon / CTBC）、JSONL + SQLite + Supabase sync |
-| cardsense-api | ✅ 核心完成 | 情境推薦、雙模式比較（BEST_SINGLE / STACK_ALL）、break-even、benefit plan、scope 過濾、Supabase 讀取 |
+| cardsense-api | ✅ 核心完成 | 情境推薦、雙模式比較（BEST_SINGLE / STACK_ALL）、break-even、benefit plan 權益切換、scope 過濾、Supabase 讀取 |
 | cardsense-web | ✅ MVP Live | 推薦頁 `/recommend`、卡片目錄 `/cards`、卡片詳情 `/cards/:cardCode`、`/calc` 年度損失社群入口頁 |
 | 資料庫遷移 | ✅ 完成 | Extractor → SQLite → Supabase sync（psycopg2）；API prod 從 Supabase 讀取 |
 | 銀行擴充 | ✅ Phase 1 完成 | 5 家銀行全部上線（E.SUN / Cathay / Taishin / Fubon / CTBC） |
+| 權益切換 | ✅ 核心完成 | Extractor plan inference + API DecisionEngine 自動選擇最佳 plan；支援 CATHAY CUBE（7 plans）、TAISHIN RICHART |
 
 ## 已支援銀行
 
@@ -73,6 +74,15 @@ CardSense 是一個以**情境式卡片比較**為核心的信用卡推薦平台
 - `refresh_and_deploy.py` 整合 extract → import → sync 一鍵部署
 - API 支援三種 repository mode：mock / sqlite / supabase
 - Prod 環境從 Supabase 讀取，local 環境保留 SQLite
+
+### 權益切換（Benefit Plan Switching）✅
+
+支援同一張卡片擁有多個權益方案，推薦引擎自動選出最佳 plan。
+
+- **Extractor**：`benefit_plans.py` plan inference（PLAN_MAPPING + PLAN_NAME_SIGNALS）、`tag_plan_ids.py` 批次標記、`planId` 欄位貫穿 SQLite → Supabase
+- **API**：`BenefitPlan` entity + `JsonBenefitPlanRepository`（讀取 `benefit-plans.json`）、`DecisionEngine` 依 `exclusiveGroup` 自動選最佳 plan、`GET /v1/cards/{cardCode}/plans` endpoint、`CardRecommendation.activePlan` 回傳
+- **已支援卡片**：CATHAY CUBE（7 plans：數位/饗購/旅行/精選/生日/兒童/日本）、TAISHIN RICHART
+- **待補**：contracts 層 `benefit-plan.schema.json` 尚未建立；前端尚未顯示 `activePlan`
 
 ## 待辦工作路線圖（Roadmap）
 
