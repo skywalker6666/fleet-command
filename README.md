@@ -26,12 +26,12 @@ ext:      .md / .txt
 
 | 專案 | 定位 | 技術棧 | 狀態 |
 |------|------|--------|------|
-| **CardSense** | 信用卡推薦 API（確定性規則引擎） | Java 21 / Spring Boot / React 19 / Python 3.13 | MVP ✅ Live |
+| **CardSense** | 信用卡推薦 API（確定性規則引擎） | Java 21 / Spring Boot / React 19 / Vite / Python 3.13 / Supabase | ✅ Live（5 銀行、/calc 社群入口） |
 | **ReviewTrustAnalyzer** | Google Maps 評論信任度分析 | Python / FastAPI / pgvector | V1 ✅ |
 | **SEEDCRAFT** | LINE-first 家庭教育教練 | Python / FastAPI / LINE SDK / Next.js | Rebrand ✅ |
 | **TechTrend** | B2B 技術週刊（NotebookLM → SaaS） | Next.js / Stripe | Spec ✅ |
-| **GoDine（搞定）** | AI 餐廳推薦（情境感知 + 個人化） | Next.js PWA / Google Maps API | 規劃中 |
-| **FridgeManager** | 食材管理 + 到期提醒 + AI 食譜 | Next.js PWA / Web Push / Open Food Facts | 規劃中 |
+| **GoDine（搞定）/ SmartChoice** | AI 餐廳推薦（情境感知 + 個人化） | Next.js PWA / Google Maps API | Spec ✅ |
+| **FridgeManager** | 食材管理 + 到期提醒 + AI 食譜 | Next.js PWA / Web Push / Open Food Facts | Spec ✅ |
 | **Knoty** | 大學生人際關係圖譜 + 社交風險 AI | React Native / Supabase / D3.js | Spec ✅ |
 
 ---
@@ -39,7 +39,7 @@ ext:      .md / .txt
 ## 開發優先序
 
 ```
-1️⃣ CardSense     — MVP Live，Phase 1 銀行擴充中（最高商業價值）
+1️⃣ CardSense     — Live（5 銀行 + /calc），Phase 4 銀行擴充第二波 + 社群成長
 2️⃣ RTA           — V1 → custom model + Agent SDK
 3️⃣ SEEDCRAFT     — LINE MVP 開發
 4️⃣ TechTrend     — 週刊生產 + 訂閱成長
@@ -53,14 +53,19 @@ ext:      .md / .txt
 ## 跨專案整合（高價值路徑）
 
 ```
-GoDine → CardSense       推薦餐廳 → 最優付款卡
-GoDine → RTA             推薦餐廳 → 評論信任度驗證
-FridgeManager → GoDine   食材快過期 → 今天煮什麼
-FridgeManager → CardSense 採購清單 → 超市最優卡
-SEEDCRAFT → RTA           補習班推薦 → 評論可信度
+GoDine → CardSense          推薦餐廳 → 最優付款卡
+GoDine → RTA                推薦餐廳 → 評論信任度驗證
+FridgeManager → GoDine      食材快過期 → 今天煮什麼
+FridgeManager → CardSense   採購清單 → 超市最優卡
+SEEDCRAFT → RTA             補習班推薦 → 評論可信度
 ```
 
 ---
+
+## 重點文件索引
+
+- [CardSense-Overview.md](./CardSense-Overview.md) — CardSense 跨 repo 架構、完成進度、Roadmap、快速開始
+- [CardSense-Demo-Spec.md](./CardSense-Demo-Spec.md) — `/calc` 年度損失社群入口頁規格
 
 ## 與各專案 Code Repo 的關係
 
@@ -69,13 +74,13 @@ SEEDCRAFT → RTA           補習班推薦 → 評論可信度
 | Repo | 內容 | Spec | 狀態 |
 |------|------|------|------|
 | [cardsense-contracts](https://github.com/WaddleStudio/cardsense-contracts) | 共用資料模型 | §4 | Schema 穩定 |
-| [cardsense-extractor](https://github.com/WaddleStudio/cardsense-extractor) | 銀行爬蟲 + LLM 解析 | §3 | 4 銀行完成 |
-| [cardsense-api](https://github.com/WaddleStudio/cardsense-api) | 推薦 API | §4-5 | Railway 部署 |
-| [cardsense-web](https://github.com/WaddleStudio/cardsense-web) | 前端展示 | — | Vercel Live |
+| [cardsense-extractor](https://github.com/WaddleStudio/cardsense-extractor) | 銀行爬蟲 + 正規化 | §3 | 5 銀行完成 + Supabase sync |
+| [cardsense-api](https://github.com/WaddleStudio/cardsense-api) | 推薦 API | §4-5 | Supabase prod 部署 |
+| [cardsense-web](https://github.com/WaddleStudio/cardsense-web) | 前端展示 + /calc 社群入口 | Demo-Spec | Vercel Live |
 | [review-trust-analyzer](https://github.com/WaddleStudio/review-trust-analyzer) | 混合評分系統 | spec-rta | |
 | [seedcraft](https://github.com/WaddleStudio/seedcraft) | LINE Bot + LIFF | spec-seedcraft | |
 | [techtrend](https://github.com/WaddleStudio/techtrend) | B2B 技術週刊 | spec-techtrend | |
-| [godine](https://github.com/WaddleStudio/godine) | AI 餐廳推薦 | spec-godine | |
+| [godine](https://github.com/WaddleStudio/godine) | AI 餐廳推薦（SmartChoice 縮小版） | spec-smartChoice | |
 | [fridgemanager](https://github.com/WaddleStudio/fridgemanager) | 食材管理 | spec-fridgemanager | |
 | [knoty](https://github.com/WaddleStudio/knoty) | 人際關係圖譜 | spec-knoty | |
 
@@ -92,4 +97,4 @@ SEEDCRAFT → RTA           補習班推薦 → 評論可信度
 
 ---
 
-*Maintained by [Waddle Studio](https://github.com/WaddleStudio) | Last updated: 2026-03-23*
+*Maintained by [Waddle Studio](https://github.com/WaddleStudio) | Last updated: 2026-04-01*
