@@ -82,7 +82,8 @@ CardSense 是一個以**情境式卡片比較**為核心的信用卡推薦平台
 - **Extractor**：`benefit_plans.py` plan inference（PLAN_MAPPING + PLAN_NAME_SIGNALS）、`tag_plan_ids.py` 批次標記、`planId` 欄位貫穿 SQLite → Supabase
 - **API**：`BenefitPlan` entity + `JsonBenefitPlanRepository`（讀取 `benefit-plans.json`）、`DecisionEngine` 依 `exclusiveGroup` 自動選最佳 plan、`GET /v1/cards/{cardCode}/plans` endpoint、`CardRecommendation.activePlan` 回傳
 - **已支援卡片**：CATHAY CUBE（7 plans：數位/饗購/旅行/精選/生日/兒童/日本）、TAISHIN RICHART
-- **待補**：contracts 層 `benefit-plan.schema.json` 尚未建立；前端尚未顯示 `activePlan`
+- **待補卡片**：E.SUN UNI Card（玉山 UNI 卡，有多種權益方案待建模）
+- **待補其他**：contracts 層 `benefit-plan.schema.json` 尚未建立；前端尚未顯示 `activePlan`
 
 ## 待辦工作路線圖（Roadmap）
 
