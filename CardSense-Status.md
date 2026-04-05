@@ -390,6 +390,36 @@ npm run dev                                       # http://localhost:5173
 
 - Card catalog filtering accuracy now depends on both API-side card eligibility aggregation and extractor-side promotion eligibility tagging.
 - If benefit-plan or eligibility heuristics change again, rerunning `refresh_and_deploy.py` is required before frontend behavior will reflect the fix.
+
+### Benefit-Plan Review Log
+
+Latest focused cleanup on `ESUN_UNICARD` and `TAISHIN_RICHART`:
+
+- Updated extractor heuristics so `ESUN_UNICARD` no longer treats theme-park offers as generic `OTHER` rows when official page wording clearly indicates `樂園` / `遊樂園`
+- Expanded benefit-plan subcategory hints for `ESUN_UNICARD` and `TAISHIN_RICHART`, including `SUPERMARKET`, `DEPARTMENT`, `TRAVEL_PLATFORM`, and `GAS_STATION`
+- Tightened Richart plan inference so travel pages are less likely to be misclassified as `PAY` merely because page copy also mentions `LINE Pay` / `台新Pay`
+- Re-ran local `ESUN` extraction and refreshed SQLite with:
+  `uv run python jobs/refresh_and_deploy.py --banks ESUN --no-supabase --db data/cardsense.db`
+
+Items now confirmed fixed:
+
+- `ESUN_UNICARD` theme-park promo now lands on `ENTERTAINMENT + THEME_PARK`
+- `ESUN_UNICARD` gas / fueling promos now produce `TRANSPORT + GAS_STATION`
+- `TAISHIN_RICHART` travel-platform promos now produce `ONLINE + TRAVEL_PLATFORM`
+- `TAISHIN_RICHART` plan inference no longer lets generic payment wording override clear travel-plan signals as easily
+
+Remaining cleanup candidates worth another pass:
+
+- `ESUN_UNICARD`
+  - some `OTHER + GENERAL` rows are still present; these appear to be a mix of welcome / first-purchase / insurance / broad coupon pages and may be valid coarse rows
+  - some `TRANSPORT + GENERAL` rows remain; likely candidates are MRT / wallet ride-code / mixed transport bundles where current signals are still too broad
+- `TAISHIN_RICHART`
+  - some plan-explanation or mixed-condition rows remain semantically coarse even when `planId` is correct
+  - one or more non-travel lifestyle pages may still need a better split between `PAY`, `WEEKEND`, and catalog-only campaign treatment
+
+Recommended next step for this thread:
+
+- update Supabase only after deciding whether the remaining `ESUN_UNICARD` and `TAISHIN_RICHART` coarse rows are acceptable conservative output or should be refined further
 # 2026-04-05 Update
 
 Recent progress relevant to benefit-plan cards:
