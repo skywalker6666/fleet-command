@@ -121,11 +121,18 @@ CardSense 是一個以**情境式卡片比較**為核心的信用卡推薦平台
 
 ### Phase 6：Skill 整理
 
-- 現有 3 個 skill（contract-evolution、git-commit-push、api-smoke-postman）維護良好，保持不變
-- 考慮新增：
-  - `cardsense-extractor-new-bank` — 新銀行 extractor 開發的標準流程
-  - `cardsense-full-pipeline-verify` — 從抽取到 API 驗證的端對端驗收流程
-- 把重複性高的操作（extract → import → smoke test）封裝成 skill
+現有 skill：
+
+| Skill | 位置 | 說明 |
+|-------|------|------|
+| `cardsense-bank-promo-review` | `cardsense-extractor/skills/` | 銀行優惠頁面審查、schema 相容性判斷、plan mapping 更新 |
+| `cardsense-pipeline-verify` | `fleet-command/skills/` (跨 repo) | 端對端驗收：extract → SQLite → API smoke → Supabase sync |
+| `cardsense-contract-evolution` | `fleet-command/skills/` (跨 repo) | 共用契約演進：schema 變更跨四個 repo 的傳播流程 |
+
+跨 repo skill 原始檔在 `fleet-command/skills/`（有版控），透過 symlink 掛載到 workspace 根目錄 `.claude/skills/`。
+
+待需求明確後考慮新增：
+  - `cardsense-new-bank-extractor` — 新銀行 extractor 開發的標準流程（放 `cardsense-extractor/skills/`）
 
 ## 快速開始
 
