@@ -54,8 +54,8 @@ CardSense 是一個以**情境式卡片比較**為核心的信用卡推薦平台
 | cardsense-api | ✅ 核心完成 + 已部署 | 情境推薦、疊加優惠計算、break-even、subcategory 場景過濾、scope/eligibilityType/通路 condition 匹配；指定 subcategory 時會一起比較 matching scene + GENERAL；Render 上線 |
 | cardsense-web | ✅ MVP 完成 + 已部署 | 推薦表單 + 卡片目錄 + SubcategoryGrid 場景選擇 + `/calc` 社群入口頁 + merchantName 輸入/提示 + 深色模式 + RWD + fintech UI |
 | 資料庫遷移 | ✅ 完成 | SQLite → Supabase sync 已上線；API prod 從 Supabase 讀取 |
-| 銀行擴充 | ✅ Phase 1 完成 | 5 家銀行上線（E.SUN / Cathay / Taishin / Fubon / CTBC），101 張卡 497 筆優惠 |
-| 資料品質 | 🔄 進行中 | 66 張 RECOMMENDABLE 卡中 44 張僅 1-2 筆優惠，泛用回饋卡與 CATALOG_ONLY 降級需審查 |
+| 銀行擴充 | ✅ Phase 1 完成 | 5 家銀行上線（E.SUN / Cathay / Taishin / Fubon / CTBC），91 張卡 717 筆優惠（387 RECOMMENDABLE） |
+| 資料品質 | 🔄 進行中 | feature extractors 已補強主要卡片；部分聯名卡仍僅 1-2 筆優惠 |
 | Auth / Rate Limiting | ⏳ 未開始 | Phase 2 商業化時實作 |
 
 ## 已支援銀行
@@ -125,7 +125,7 @@ CardSense 是一個以**情境式卡片比較**為核心的信用卡推薦平台
 
 **核心實作**：
 - `DecisionEngine`（736+ 行）— 確定性推薦邏輯，scenario 解析、promotion 過濾、回饋計算、排序；支援 subcategory 場景過濾、payment method 匹配、benefit tier 運行時覆寫
-- `RewardCalculator` — PERCENT / FIXED / POINTS 回饋計算，封頂邏輯
+- `RewardCalculator` — PERCENT / FIXED / POINTS / MILES 回饋計算，封頂邏輯
 - `CatalogService` — 卡片目錄查詢，scope-aware（RECOMMENDABLE / CATALOG_ONLY / FUTURE_SCOPE）
 - `SqlitePromotionRepository` / `SupabasePromotionRepository` — 支援 local SQLite 與 prod Supabase 兩種 promotion 來源
 - `CorsConfig` — 前端跨域存取
@@ -171,9 +171,11 @@ CardSense 是一個以**情境式卡片比較**為核心的信用卡推薦平台
 
 ### cardsense-extractor
 
-**Latest**: `a1f02ca` — feat: add flexible CTBC targeted extraction and extract-ctbc skill
+**Latest**: `e4bbf7d` — feat: add MILES cashback type and feature extractors for Cathay/Fubon cards
 
 **近期功能迭代**：
+- `e4bbf7d` feat: add MILES cashback type and feature extractors for Cathay/Fubon cards
+- `5f23202` feat: add Taishin feature extractors for 9 card families
 - `a1f02ca` feat: add flexible CTBC targeted extraction and extract-ctbc skill
 - `d6920fa` feat: implement general reward promotion expansion across multiple extractors
 - `d063574` Add catalog review and bank-wide supplement rules
@@ -181,8 +183,6 @@ CardSense 是一個以**情境式卡片比較**為核心的信用卡推薦平台
 - `4f663ed` fix: review and sync CTBC promo cleanup
 - `5a113d3` Add missing Formosa card promotions
 - `228f80c` Review and clean Fubon promo extraction
-- `79e541b` Refine Cathay non-CUBE promo review rules
-- `904667e` Document bank promo review and payment cleanup workflow
 
 **專案結構**：
 ```
@@ -205,6 +205,7 @@ jobs/
 ├── run_real_bank_job.py       # shared runner for bank extractors
 ├── run_{esun,cathay,taishin,fubon,ctbc}_real_job.py
 ├── run_ctbc_targeted.py       # CTBC targeted extraction (specific cards by slug)
+├── run_taishin_targeted.py    # Taishin targeted extraction (12 priority cards)
 ├── analyze_jsonl_output.py    # quality inspection
 sql/
 └── cardsense_schema.sql       # SQLite schema
@@ -265,11 +266,11 @@ taxonomy/      → category / channel / frequency taxonomy
 
 ---
 
-## 已知限制（截至 2026-04-06）
+## 已知限制（截至 2026-04-07）
 
 **API**：
 - SQLite repo 從 `raw_payload_json` 還原 `stackability` metadata，尚未拆成顯式欄位
-- `POINTS` 尚未引入銀行別點數折現規則
+- `POINTS` 尚未引入銀行別點數折現規則；`MILES` 為新增類型，API 端 `RewardCalculator` 需對應支援
 - Break-even 目前只處理代表 promotion 間的 `FIXED` vs `PERCENT` 比較
 - `STACK_ALL_ELIGIBLE` 仍為 heuristic aggregation，待 `stackability` 標註完整後升級為 deterministic stacking
 
@@ -279,7 +280,7 @@ taxonomy/      → category / channel / frequency taxonomy
 - Real extractor 依賴外部網站可用性
 
 **Contracts**：
-- `POINTS` 型別尚未定義銀行別點數折現規則
+- `POINTS` 型別尚未定義銀行別點數折現規則；`MILES` 已新增於 extractor 端，contracts schema 需同步
 - `stackability` metadata 設計完成，部分銀行的實際標註資料仍在累積中
 
 ---
@@ -288,7 +289,7 @@ taxonomy/      → category / channel / frequency taxonomy
 
 ### Phase 1：5 家銀行上線 + Extractor 架構 ✅
 
-5 家銀行上線（E.SUN / Cathay / Taishin / Fubon / CTBC），101 張卡 497 筆優惠。
+5 家銀行上線（E.SUN / Cathay / Taishin / Fubon / CTBC），91 張卡 717 筆優惠（387 RECOMMENDABLE）。Feature extractors 補強主要卡片回饋覆蓋率。
 
 ### Phase 2：前端 + 社群入口 ✅
 
@@ -314,11 +315,13 @@ SQLite → Supabase sync 上線，API prod 從 Supabase 讀取。
 
 ### 🔥 當前優先：既有 5 家銀行資料品質提升
 
-**問題現狀**（2026-04-06 審計）：
+**問題現狀**（2026-04-07 更新）：
 
-- 66 張 RECOMMENDABLE 卡中，**44 張（67%）僅有 1-2 筆優惠**
-- 13 張卡只有 `OTHER+GENERAL`（泛用回饋），對用戶推薦價值低
-- 大量優惠被保守降級為 CATALOG_ONLY，部分與資料不足有關
+- 91 張卡 717 筆優惠，387 RECOMMENDABLE（較 2026-04-06 審計大幅改善）
+- Feature extractors 已為 Cathay（蝦皮/長榮/亞萬/雙幣）、Fubon（鑽保/富利生活/Open Possible）、Taishin（9 個卡族）補上基本回饋
+- E.SUN 覆蓋率從 14→45 張卡，RECOMMENDABLE 從 85→271
+- 仍有部分聯名卡（如台茂、Angel、台北市政府認同卡等）僅有 CATALOG_ONLY 優惠
+- `MILES` 回饋類型已新增，API 端需對應支援
 
 **目標**：讓每張 RECOMMENDABLE 卡在其適用的消費情境中都能公平入榜比較。
 
@@ -436,7 +439,7 @@ npm run dev                                       # http://localhost:5173
 - [CardSense Spec](./specs/spec-cardSense.md) — 完整專案規格說明書
 - [API Implementation Checklist](https://github.com/WaddleStudio/cardsense-api/blob/master/IMPLEMENTATION_CHECKLIST.md) — API 待辦與遷移時機
 
-*Last updated: 2026-04-06*
+*Last updated: 2026-04-07*
 
 ## 備註
 
