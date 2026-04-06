@@ -51,7 +51,7 @@ CardSense 是一個以**情境式卡片比較**為核心的信用卡推薦平台
 - ✅ **TAISHIN（台新）** — Cloudflare Browser Rendering + HTML 抽取
 - ✅ **FUBON（富邦）** — Cloudflare Browser Rendering + HTML 抽取
 - ✅ **CTBC（中信）** — Playwright + JSON API 抽取
-- ⏳ MEGA / FIRST / SINOPAC / TPBANK / UBOT
+- — MEGA / FIRST / SINOPAC / TPBANK / UBOT（Backlog，待既有 5 家資料品質提升後）
 
 ## 已完成里程碑
 
@@ -100,39 +100,24 @@ CardSense 是一個以**情境式卡片比較**為核心的信用卡推薦平台
 
 ## 待辦工作路線圖（Roadmap）
 
-### Phase 4：銀行擴充第二波
+### 🔥 當前優先：既有 5 家銀行資料品質提升
 
-**下一批銀行**：MEGA → FIRST → SINOPAC → TPBANK → UBOT
+66 張 RECOMMENDABLE 卡中 44 張（67%）僅有 1-2 筆優惠，推薦體驗不足。
 
-- 復用現有 extractor 架構與 `refresh_and_deploy.py` 部署流程
-- 每家銀行先分析官網結構，判斷適用 HTML 抽取、JSON API 或 Playwright
-- 為每家新銀行建立 fixture 檔案，確保 heuristic 變更不破壞既有銀行
+- **P0：泛用回饋卡補全** — 確保全通路基本回饋（如 0.5-2.5%）在任何消費情境查詢時都能入榜與指定通路優惠競爭
+- **P1：CATALOG_ONLY 降級審查** — 51 張卡 159 筆優惠被降級，部分與資料不足有關而非真正不可推薦
+- **P2：聯名卡通用優惠補全** — 聯名卡除專屬通路外通常也享有銀行通用活動，目前未擷取
+- **P3：前端體驗配合** — 優惠少的卡片加標註、推薦結果標示回饋類型
 
-### Phase 5：前端優化與成長
+### 後續待辦
 
-- ✅ 行動裝置 RWD 全面修復（header 溢出、touch target 合規、tap delay 消除）
-- ✅ FilterChip 共用元件 + touch target sizing tokens（`--spacing-touch` / `--spacing-touch-sm`）
-- ✅ 無障礙改善（aria-label、aria-expanded、prefers-reduced-motion）
-- ✅ CardsPage 進階篩選可收合
-- ✅ CardDetailPage 推薦路由修正
-- `/calc` 社群投放（PTT、Dcard、Facebook 信用卡社團）
-- 分享圖片品質優化
-- 追蹤埋點完善（PostHog / Vercel Analytics）
-
-### Phase 6：Skill 整理
-
-現有 skill：
-
-| Skill | 位置 | 說明 |
-|-------|------|------|
-| `cardsense-bank-promo-review` | `cardsense-extractor/skills/` | 銀行優惠頁面審查、schema 相容性判斷、plan mapping 更新 |
-| `cardsense-pipeline-verify` | `fleet-command/skills/` (跨 repo) | 端對端驗收：extract → SQLite → API smoke → Supabase sync |
-| `cardsense-contract-evolution` | `fleet-command/skills/` (跨 repo) | 共用契約演進：schema 變更跨四個 repo 的傳播流程 |
-
-跨 repo skill 原始檔在 `fleet-command/skills/`（有版控），透過 symlink 掛載到 workspace 根目錄 `.claude/skills/`。
-
-待需求明確後考慮新增：
-  - `cardsense-new-bank-extractor` — 新銀行 extractor 開發的標準流程（放 `cardsense-extractor/skills/`）
+| 項目 | 前置條件 |
+|------|----------|
+| `stackability` 顯式欄位 | — |
+| `POINTS` 銀行別折現規則 | — |
+| 商業化（API Key / Rate Limiting / Stripe） | 資料品質達標 |
+| `/calc` 社群投放 | 資料品質達標 |
+| 新銀行擴充（MEGA / SINOPAC / ...） | 既有 5 家品質穩定 |
 
 ## 快速開始
 
@@ -162,7 +147,7 @@ cd cardsense-api
 mvn spring-boot:run \
   -Dspring-boot.run.jvmArguments="\
     -Dcardsense.repository.mode=sqlite \
-    -Dcardsense.repository.sqlite.path=D:/alan_self/cardsense/cardsense-extractor/data/cardsense.db"
+    -Dcardsense.repository.sqlite.path=../cardsense-extractor/data/cardsense.db"
 ```
 
 API 啟動後可用的端點：
@@ -189,17 +174,3 @@ cd cardsense-contracts
 - [cardsense-web README](../cardsense-web/README.md) — 前端展示、技術棧、部署設定
 - [API Implementation Checklist](../cardsense-api/IMPLEMENTATION_CHECKLIST.md) — API 待辦與前端 / 資料庫遷移時機
 - [CardSense Demo Spec](./CardSense-Demo-Spec.md) — `/calc` 年度損失入口頁詳細規格
-# 2026-04-05 Snapshot
-
-Benefit-plan implementation has moved beyond basic plan metadata and now includes:
-
-- extractor-native `CATHAY_CUBE` plan parsing
-- merchant-aware cluster promotions
-- conservative CUBE tier runtime handling
-- frontend merchant and CUBE-tier inputs
-- card-scoped Supabase rollout support
-
-For the cleanest current references, prefer:
-
-- `fleet-command/CardSense-Benefit-Plan-Implementation-Plan.md`
-- `fleet-command/CardSense-Bank-Promo-Review-Workflow.md`

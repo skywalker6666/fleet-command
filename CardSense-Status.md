@@ -54,7 +54,8 @@ CardSense 是一個以**情境式卡片比較**為核心的信用卡推薦平台
 | cardsense-api | ✅ 核心完成 + 已部署 | 情境推薦、疊加優惠計算、break-even、subcategory 場景過濾、scope/eligibilityType/通路 condition 匹配；指定 subcategory 時會一起比較 matching scene + GENERAL；Render 上線 |
 | cardsense-web | ✅ MVP 完成 + 已部署 | 推薦表單 + 卡片目錄 + SubcategoryGrid 場景選擇 + `/calc` 社群入口頁 + merchantName 輸入/提示 + 深色模式 + RWD + fintech UI |
 | 資料庫遷移 | ✅ 完成 | SQLite → Supabase sync 已上線；API prod 從 Supabase 讀取 |
-| 銀行擴充 | 🔄 進行中 | TAISHIN ✅ FUBON ✅ CTBC ✅ 完成（5 銀行 101 張卡 452 筆優惠）、下一批：MEGA / SINOPAC |
+| 銀行擴充 | ✅ Phase 1 完成 | 5 家銀行上線（E.SUN / Cathay / Taishin / Fubon / CTBC），101 張卡 497 筆優惠 |
+| 資料品質 | 🔄 進行中 | 66 張 RECOMMENDABLE 卡中 44 張僅 1-2 筆優惠，泛用回饋卡與 CATALOG_ONLY 降級需審查 |
 | Auth / Rate Limiting | ⏳ 未開始 | Phase 2 商業化時實作 |
 
 ## 已支援銀行
@@ -66,7 +67,7 @@ CardSense 是一個以**情境式卡片比較**為核心的信用卡推薦平台
 | ✅ TAISHIN（台新） | `taishin_real.py` | Cloudflare Browser Rendering + HTML |
 | ✅ FUBON（富邦） | `fubon_real.py` | Cloudflare Browser Rendering + HTML |
 | ✅ CTBC（中信） | `ctbc_real.py` | JSON API（creditcards.cardlist.json）+ Playwright |
-| ⏳ MEGA / FIRST / SINOPAC / TPBANK / UBOT | — | 待排入 |
+| — MEGA / FIRST / SINOPAC / TPBANK / UBOT | — | Backlog，待既有 5 家資料品質提升後再排入 |
 
 ---
 
@@ -282,65 +283,83 @@ taxonomy/      → category / channel / frequency taxonomy
 
 ---
 
-## 待辦工作路線圖（Roadmap）
+## 已完成里程碑
 
-### Phase 1：新銀行擴充 + Extractor 能力提升 ✅
+### Phase 1：5 家銀行上線 + Extractor 架構 ✅
 
-5 家銀行全部上線（E.SUN / Cathay / Taishin / Fubon / CTBC），101 張卡 452+ 筆優惠。
+5 家銀行上線（E.SUN / Cathay / Taishin / Fubon / CTBC），101 張卡 497 筆優惠。
 
-- 每家銀行獨立 extractor 檔案，復用 `promotion_rules.py` + `run_real_bank_job.py`
-- Playwright + Cloudflare Browser Rendering 支援反爬蟲銀行
-- `sectioned_page.py` section detection 強化
-- 各銀行 fixture 確保 heuristic 變更不破壞既有結果
-- 全銀行 promo review 完成（Taishin / CTBC / Fubon / Cathay non-CUBE）：payment condition 清理、subcategory 細化、benefit plan 對齊
+### Phase 2：前端 + 社群入口 ✅
 
-**API 已完成的增強**：
-- subcategory 場景過濾（選 subcategory 時 matching scene + GENERAL 一起排名）
-- payment method aware recommendation matching
-- benefit tier runtime handling（CUBE Level 1/2/3、Richart tier）
-- active plan runtime state
-- Supabase prepared statement pooler 修正
+推薦頁、卡片目錄、`/calc` 社群入口頁、break-even 視覺化、深色模式、RWD。
 
-**尚未開始**：
-- `stackability` 拆成顯式 SQLite 欄位
-- `POINTS` 型別銀行別點數折現規則
-- promotion 排除原因可解釋性說明
+### Phase 3：資料庫遷移 ✅
 
-### Phase 2：商業化準備（部分完成）
+SQLite → Supabase sync 上線，API prod 從 Supabase 讀取。
 
-**已完成**：
-- ✅ `/calc` 傳播入口頁已上線（計算機風格 UI、分享圖片生成）
-- ✅ 前端 break-even 視覺化、多優惠堆疊展示
-- ✅ 免責聲明（每筆 API 回應包含 disclaimer）
-
-**未開始**：
-- API Key 認證 + Rate Limiting
-- 聯盟行銷連結揭露
-- B2B 客戶 onboarding 流程
-- Stripe Billing 整合（API 訂閱制）
-- `/calc` 社群投放（PTT、Dcard、Facebook 信用卡社團）
-
-### Phase 3：資料庫遷移（SQLite → Supabase）✅
-
-- Extractor 已支援 SQLite → Supabase sync（`supabase_store.py` + `refresh_and_deploy.py`）
-- API prod profile 已切到 Supabase PostgreSQL，local profile 仍保留 SQLite
-- `promotion_versions` / `promotion_current` / `extract_runs` 三張表都已完成 schema parity
-- `subcategory` 與 `planId` 等新欄位已貫穿 SQLite / Supabase / API response
-
-### Phase 4：Skill 整理 ✅
-
-現有 skill：
+### Skill 整理 ✅
 
 | Skill | 位置 | 說明 |
 |-------|------|------|
-| `cardsense-bank-promo-review` | `cardsense-extractor/skills/` | 銀行優惠頁面審查、schema 相容性判斷、plan mapping 更新 |
-| `cardsense-pipeline-verify` | `fleet-command/skills/` (跨 repo) | 端對端驗收：extract → SQLite → API smoke → Supabase sync |
-| `cardsense-contract-evolution` | `fleet-command/skills/` (跨 repo) | 共用契約演進：schema 變更跨四個 repo 的傳播流程 |
+| `cardsense-bank-promo-review` | `cardsense-extractor/skills/` | 銀行優惠頁面審查 |
+| `cardsense-pipeline-verify` | `fleet-command/skills/` (跨 repo) | 端對端驗收 |
+| `cardsense-contract-evolution` | `fleet-command/skills/` (跨 repo) | 共用契約演進 |
 
 跨 repo skill 原始檔在 `fleet-command/skills/`，透過 symlink 掛載到 workspace 根目錄 `.claude/skills/`。
 
-待需求明確後考慮新增：
-  - `cardsense-new-bank-extractor` — 新銀行 extractor 開發的標準流程（放 `cardsense-extractor/skills/`）
+---
+
+## 待辦工作路線圖（Roadmap）
+
+### 🔥 當前優先：既有 5 家銀行資料品質提升
+
+**問題現狀**（2026-04-06 審計）：
+
+- 66 張 RECOMMENDABLE 卡中，**44 張（67%）僅有 1-2 筆優惠**
+- 13 張卡只有 `OTHER+GENERAL`（泛用回饋），對用戶推薦價值低
+- 大量優惠被保守降級為 CATALOG_ONLY，部分與資料不足有關
+
+**目標**：讓每張 RECOMMENDABLE 卡在其適用的消費情境中都能公平入榜比較。
+
+#### P0：泛用回饋卡補全
+
+許多卡片有全通路基本回饋（如 0.5-2.5% 現金回饋），目前只有一筆 `OTHER+GENERAL`。這些卡在任何消費情境查詢時都應入榜與指定通路優惠競爭。
+
+- 確認泛用回饋的適用類別範圍（全類別 or 排除特定類別）
+- 確保 DecisionEngine 在比較時，泛用回饋能與指定通路優惠一起排名
+- 審查 `ESUN_EASY_CARD`（0.2% 點數）、`CTBC_B_CASHBACK_SIGNATURE`（2.5%）、`ESUN_DOCTOR_CARD`（0.6%）等代表案例
+
+#### P1：CATALOG_ONLY 降級審查
+
+目前 51 張卡 159 筆優惠被標為 CATALOG_ONLY。部分降級原因是資料不足而非真正不可推薦。
+
+- 逐銀行審查 CATALOG_ONLY 優惠，判斷哪些可提升為 RECOMMENDABLE
+- 重點審查 Richart（7 筆中 5 筆 CATALOG_ONLY）、Fubon、CTBC 聯名卡
+- 對於確實需要登錄或 plan 切換的優惠，維持 CATALOG_ONLY 但補充說明
+
+#### P2：聯名卡通用優惠補全
+
+聯名卡除了專屬通路優惠，通常也享有該銀行的通用活動。目前 extractor 只抓了專屬頁面。
+
+- 識別各銀行的「全卡適用」通用活動（如玉山全通路回饋）
+- 判斷是否需要為聯名卡補入通用優惠 row
+- 評估 extractor 是否需要新增「bank-wide promotion」擷取能力
+
+#### P3：前端體驗配合
+
+- 優惠少的卡片在目錄頁降低顯示優先度或加標註
+- 推薦結果中標示「此卡僅有通用回饋」
+- 卡片詳情頁顯示「此卡目前僅擷取到 N 筆優惠」提示
+
+### 後續待辦
+
+| 項目 | 說明 | 前置條件 |
+|------|------|----------|
+| `stackability` 顯式欄位 | 拆出 SQLite 欄位，取代 `raw_payload_json` 還原 | — |
+| `POINTS` 折現規則 | 銀行別點數折現率（目前各銀行點數價值不同） | — |
+| 商業化 | API Key + Rate Limiting、聯盟行銷、Stripe Billing | 資料品質達標 |
+| `/calc` 社群投放 | PTT、Dcard、Facebook 信用卡社團 | 資料品質達標 |
+| 新銀行擴充 | MEGA / FIRST / SINOPAC / TPBANK / UBOT | 既有 5 家品質穩定後 |
 
 ---
 
@@ -414,8 +433,6 @@ npm run dev                                       # http://localhost:5173
 - [cardsense-web](https://github.com/WaddleStudio/cardsense-web) — 前端展示、推薦表單、卡片目錄、深色模式
 - [CardSense Demo Spec](./CardSense-Demo-Spec.md) — `/calc` 社群入口頁詳細規格
 - [CardSense Spec](./specs/spec-cardSense.md) — 完整專案規格說明書
-- [推薦引擎增強設計](./specs/cardsense-plans/2026-03-28-recommendation-enhancement-design.md) — 六項增強設計文件
-- [推薦引擎增強實作計畫](./specs/cardsense-plans/2026-03-28-recommendation-enhancement-impl.md) — 10-task 實作計畫
 - [API Implementation Checklist](https://github.com/WaddleStudio/cardsense-api/blob/master/IMPLEMENTATION_CHECKLIST.md) — API 待辦與遷移時機
 
 *Last updated: 2026-04-06*

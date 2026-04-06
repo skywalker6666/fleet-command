@@ -39,7 +39,7 @@ ext:      .md / .txt
 ## 開發優先序
 
 ```
-1️⃣ CardSense     — Live（5 銀行 + /calc），Phase 4 銀行擴充第二波 + 社群成長
+1️⃣ CardSense     — Live（5 銀行 + /calc），當前：既有資料品質提升 + 泛用回饋卡入榜
 2️⃣ RTA           — V1 → custom model + Agent SDK
 3️⃣ SEEDCRAFT     — LINE MVP 開發
 4️⃣ TechTrend     — 週刊生產 + 訂閱成長
