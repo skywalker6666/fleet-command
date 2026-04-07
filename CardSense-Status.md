@@ -55,7 +55,7 @@ CardSense 是一個以**情境式卡片比較**為核心的信用卡推薦平台
 | cardsense-web | ✅ MVP 完成 + 已部署 | 推薦表單 + 卡片目錄 + SubcategoryGrid 場景選擇 + `/calc` 社群入口頁 + merchantName 輸入/提示 + 深色模式 + RWD + fintech UI |
 | 資料庫遷移 | ✅ 完成 | SQLite → Supabase sync 已上線；API prod 從 Supabase 讀取 |
 | 銀行擴充 | ✅ Phase 1 完成 | 5 家銀行上線（E.SUN / Cathay / Taishin / Fubon / CTBC），100 張卡 763 筆優惠（506 RECOMMENDABLE） |
-| 資料品質 | ✅ P0 完成 | general reward expansion 修復、Richart plan-specific 修復、feature extractor expansion 修復；RECOMMENDABLE 從 387→506 |
+| 資料品質 | ✅ P0 完成 | general reward expansion 修復、Richart plan-specific 修復、feature extractor expansion 修復；RECOMMENDABLE 從 387→506；聯名卡通路 + 日期 condition 推斷已上線 |
 | Auth / Rate Limiting | ⏳ 未開始 | Phase 2 商業化時實作 |
 
 ## 已支援銀行
@@ -155,6 +155,8 @@ CardSense 是一個以**情境式卡片比較**為核心的信用卡推薦平台
 | `RETAIL_CHAIN` | 實體通路限定 | COSTCO, PXMART, CARREFOUR |
 | `PAYMENT_PLATFORM` | 支付平台限定 | LINE_PAY, JKOPAY, TAIWAN_PAY |
 | `MERCHANT` | 商家名稱限定 | CHATGPT, CLAUDE, UBER_EATS, CHINA_AIRLINES |
+| `DAY_OF_MONTH` | 每月指定日 | 13（每月13號卡友日） |
+| `DAY_OF_WEEK` | 每週指定日 / 週末 | WED, FRI_SAT, WEEKEND |
 
 **推薦排序（確定性五層 tiebreaker）**：
 1. effective return 降序
@@ -178,9 +180,14 @@ CardSense 是一個以**情境式卡片比較**為核心的信用卡推薦平台
 
 ### cardsense-extractor
 
-**Latest**: `3fb8f80` — fix: recategorize HERBALIFE general reward from ONLINE/SUBSCRIPTION to OTHER/GENERAL
+**Latest**: `ca7b38c` — docs: add cobranded retailer and date conditions implementation plan
 
 **近期功能迭代**：
+- `ca7b38c` docs: add cobranded retailer and date conditions implementation plan
+- `dd91685` fix: use post-expansion cobranded condition inference for E.SUN
+- `0a3b588` feat: wire cobranded retailer and date conditions into all extractors
+- `fa4087f` feat: add date condition inference (DAY_OF_MONTH, DAY_OF_WEEK)
+- `ae41e9b` feat: add co-branded retailer condition inference for 中友百貨 and 大江
 - `3fb8f80` fix: recategorize HERBALIFE general reward for expansion
 - `d001ab4` fix: pass Fubon feature extractor promos through general reward expansion
 - `84c4294` fix: keep Richart plan-specific promos RECOMMENDABLE despite registration text
@@ -204,7 +211,7 @@ extractor/
 ├── taishin_real.py            # Taishin：Cloudflare Browser Rendering
 ├── fubon_real.py              # Fubon：Cloudflare Browser Rendering
 ├── ctbc_real.py               # CTBC：JSON API + Playwright（47 張卡）
-├── promotion_rules.py         # reward / category / condition / subcategory heuristics
+├── promotion_rules.py         # reward / category / condition / subcategory / cobranded / date heuristics
 ├── html_utils.py              # HTML cleanup helpers
 ├── page_extractors/
 │   └── sectioned_page.py     # shared section / offer block extraction
@@ -287,6 +294,8 @@ taxonomy/      → category / channel / frequency taxonomy
 - `STACK_ALL_ELIGIBLE` 仍為 heuristic aggregation，待 `stackability` 標註完整後升級為 deterministic stacking
 
 **Extractor**：
+- `DAY_OF_MONTH` / `DAY_OF_WEEK` condition 目前僅標記，API 端尚未依日期過濾推薦結果
+- `COBRANDED_RETAILER_SIGNALS` 目前僅覆蓋中友百貨 / 大江，其他聯名卡通路待擴充
 - 銀行頁面結構可能改版，heuristic 需持續調整
 - 部分活動屬於身份型、首刷型或分期型，只適合歸類為 `CATALOG_ONLY` 或 `FUTURE_SCOPE`
 - Real extractor 依賴外部網站可用性
@@ -354,6 +363,23 @@ SQLite → Supabase sync 上線，API prod 從 Supabase 讀取。
 - `MILES` 類型 API 端 RewardCalculator 支援
 - 3 張消失的 Fubon 卡需 targeted re-extraction
 
+#### P0.5：聯名卡通路 + 日期 Condition 推斷 — ✅ 完成
+
+**問題**：中友百貨、大江等聯名卡的特定通路優惠被當成通用回饋（缺少 RETAIL_CHAIN condition）；每月13號卡友日等限定日期優惠缺少日期 condition。
+
+**已完成**：
+- ✅ `COBRANDED_RETAILER_SIGNALS` 字典 — title 關鍵字 → RETAIL_CHAIN condition 映射（`ae41e9b`）
+- ✅ `append_inferred_date_conditions()` — DAY_OF_MONTH / DAY_OF_WEEK / WEEKEND regex 偵測（`fa4087f`）
+- ✅ 全 5 家 extractor + normalize.py 管線整合（`0a3b588`）
+- ✅ E.SUN post-expansion cobranded inference — 避免 general reward expansion 被 RETAIL_CHAIN 阻斷（`dd91685`）
+- ✅ 驗證：中友 13號卡友日 `RETAIL_CHAIN:CHUNGYO` + `DAY_OF_MONTH:13`、大江 `RETAIL_CHAIN:METROWALK`，promotion 數量不變（493/357）
+- ✅ 157 tests pass
+
+**設計決策**：
+- API 端暫不依日期 condition 過濾（先標記，前端顯示，使用者自行判斷）
+- `COBRANDED_RETAILER_SIGNALS` 可輕鬆擴充（寶雅、燦坤等）
+- E.SUN 因 card name 與 promotion title 分離，需 post-expansion pass；其他 extractor 用 inline pipeline
+
 #### P1：CATALOG_ONLY 降級審查 — 🟡 約 50% 完成
 
 **已完成**：
@@ -408,6 +434,8 @@ SQLite → Supabase sync 上線，API prod 從 Supabase 讀取。
 |------|------|----------|
 | Fubon targeted re-extraction | 補回 INSURANCE/INFINITE/DIGITALLIFE | — |
 | `MILES` API 支援 | RewardCalculator 新增哩程回饋計算 | — |
+| 日期 condition API 過濾 | DecisionEngine 支援 DAY_OF_MONTH / DAY_OF_WEEK 過濾 | P0.5 ✅ |
+| 擴充 COBRANDED_RETAILER_SIGNALS | 寶雅、燦坤、新光三越等聯名卡通路 | P0.5 ✅ |
 | `stackability` 顯式欄位 | 拆出 SQLite 欄位，取代 `raw_payload_json` 還原 | — |
 | `POINTS` 折現規則 | 銀行別點數折現率（目前各銀行點數價值不同） | — |
 | 商業化 | API Key + Rate Limiting、聯盟行銷、Stripe Billing | 資料品質達標 |
