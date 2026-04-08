@@ -125,11 +125,19 @@ For **breaking** changes (requires coordination):
 
 ### Adding a new subcategory
 
-1. `cardsense-contracts/taxonomy/` — add to subcategory list
+1. `cardsense-contracts/taxonomy/subcategory-taxonomy.json` — add subcategory entry with `category` and `description`
 2. `cardsense-extractor/extractor/promotion_rules.py` — add `SUBCATEGORY_SIGNALS` entry
 3. `cardsense-extractor/models/promotion.py` — add to `SubcategoryEnum`
 4. `cardsense-api` — `Subcategory` enum class (auto-recognized from DB string)
-5. `cardsense-web` — add label/icon mapping in `SubcategoryGrid.tsx`
+5. `cardsense-web/src/lib/taxonomy.ts` — add Chinese label to `SUBCATEGORY_LABEL_MAP`; if the subcategory needs a frontend category override (e.g., contracts says OVERSEAS but frontend shows it under ONLINE), add to `FRONTEND_CATEGORY_OVERRIDES`
+
+> **Note:** `SUBCATEGORIES` and `MERCHANT_SUGGESTIONS` in the frontend are auto-derived from contracts JSON via `@contracts` Vite alias. No need to manually edit `enums.ts` for these.
+
+### Adding a new merchant
+
+1. `cardsense-contracts/taxonomy/merchant-registry.json` — add entry with `code`, `label`, `category`, `subcategory`, `aliases`
+2. Frontend picks it up automatically on next build (Vercel redeploy or local dev server restart)
+3. No frontend code changes needed — `MERCHANT_SUGGESTIONS` is derived from the registry
 
 ### Adding a new condition type
 

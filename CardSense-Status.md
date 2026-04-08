@@ -49,7 +49,7 @@ CardSense 是一個以**情境式卡片比較**為核心的信用卡推薦平台
 
 | 模組 | 狀態 | 說明 |
 |------|------|------|
-| cardsense-contracts | ✅ 完成 | Promotion / Recommendation / Stackability schema 穩定，含 subcategory 欄位、merchant registry（83 筆） |
+| cardsense-contracts | ✅ 完成 | Promotion / Recommendation / Stackability schema 穩定，含 subcategory 欄位、merchant registry（170+ 筆，含 14 家飯店品牌），前端透過 Vite alias 動態引用 taxonomy JSON |
 | cardsense-extractor | ✅ 核心完成 | E.SUN + Cathay + TAISHIN + FUBON + CTBC real extractor、subcategory inference、JSONL + SQLite 匯入、refresh_and_deploy |
 | cardsense-api | ✅ 核心完成 + 已部署 | 情境推薦、疊加優惠計算、break-even、subcategory 場景過濾、scope/eligibilityType/通路 condition 匹配；指定 subcategory 時會一起比較 matching scene + GENERAL；Render 上線 |
 | cardsense-web | ✅ MVP 完成 + 已部署 | 推薦表單 + 卡片目錄 + SubcategoryGrid 場景選擇 + `/calc` 社群入口頁 + merchantName 輸入/提示 + 深色模式 + RWD + fintech UI |
@@ -75,9 +75,16 @@ CardSense 是一個以**情境式卡片比較**為核心的信用卡推薦平台
 
 ### cardsense-web（最活躍）
 
-**Latest**: `649758c` — refactor: migrate condition types to VENUE/PAYMENT, split VENUE subcategory
+**Latest**: `7fb92ca` — dynamic taxonomy from contracts
 
 **近期功能迭代**：
+- `7fb92ca` chore: trigger redeploy for updated hotel merchants in contracts
+- `6c7e271` fix: remove auto-generated category-level merchant fallbacks
+- `4380b05` fix: clone contracts in Vercel build, fix JSON type casts
+- `85c4bd1` fix: apply FRONTEND_CATEGORY_OVERRIDES to MERCHANT_SUGGESTIONS keys
+- `2e15462` refactor: replace hardcoded SUBCATEGORIES/MERCHANT_SUGGESTIONS with contracts-derived exports
+- `e9c2931` feat: add taxonomy.ts — derive SUBCATEGORIES and MERCHANT_SUGGESTIONS from contracts JSON
+- `3f3b6b3` feat: add @contracts Vite alias for taxonomy JSON imports
 - `649758c` refactor: migrate condition types to VENUE/PAYMENT, split VENUE subcategory, add purple badge for payment conditions
 - `664441d` feat: add 中友百貨 and 大江購物中心 to merchant picker
 - `e42c838` Add total and recommendable promotion counts to CardItem component
@@ -106,6 +113,7 @@ CardSense 是一個以**情境式卡片比較**為核心的信用卡推薦平台
 - 卡片目錄頁（多維篩選：銀行、資格類型、優惠類別、年費區間、推薦範圍；可收合進階篩選；銀行品牌色 + 精選標記 + 空狀態優化）
 - 卡片詳情頁（基本資料 + 優惠資訊依類別分組顯示 + 權益切換提醒 + 一鍵跳轉推薦）
 - 權益切換卡支援（可折疊切換卡狀態控制、merchant picker、benefit tier badges、官方方案名稱對齊）
+- 動態 taxonomy（SUBCATEGORIES、MERCHANT_SUGGESTIONS 從 contracts JSON 自動衍生，`@contracts` Vite alias + `src/lib/taxonomy.ts`，Vercel build 時 shallow-clone contracts repo）
 - 深色模式（跟隨系統偏好，可手動切換）
 - 行動裝置 RWD 最佳化（響應式 header、touch target 合規 44/36px、300ms tap delay 消除）
 - Fintech 風格 UI（OKLCH 語意色彩 token）
@@ -255,13 +263,20 @@ sql/
 
 ### cardsense-contracts
 
-**Latest**: `d316d2e` — feat: add merchant registry, split VENUE subcategory into SINGING + LIVE_EVENT
+**Latest**: `c90faab` — feat: add 14 hotel brands to HOTEL subcategory
+
+**近期功能迭代**：
+- `c90faab` feat: add 14 hotel brands to HOTEL subcategory (萬豪/希爾頓/IHG/香格里拉/凱悅/喜來登/晶華/老爺/寒舍/凱撒/國賓/福華/雲品/涵碧樓)
+- `228f4f6` feat: expand merchant registry with 60 new entries across all subcategories
+- `bb8745e` feat: add 台灣 Pay to payment registry
+- `472032c` feat: add payment registry for PAYMENT condition type tools
+- `d316d2e` feat: add merchant registry, split VENUE subcategory into SINGING + LIVE_EVENT
 
 **Schema 結構**：
 ```
 promotion/     → promotion-normalized.schema.json + valid/invalid 範例
 recommendation/ → request + response JSON schema 與範例
-taxonomy/      → category / channel / frequency / merchant-registry taxonomy
+taxonomy/      → category / channel / frequency / subcategory / merchant-registry / payment-registry taxonomy
 ```
 
 **Stackability Metadata**：描述優惠間的可疊加關係
@@ -445,7 +460,7 @@ SQLite → Supabase sync 上線，API prod 從 Supabase 讀取。
 | `MILES` API 支援 | RewardCalculator 新增哩程回饋計算 | — |
 | 日期 condition API 過濾 | DecisionEngine 支援 DAY_OF_MONTH / DAY_OF_WEEK 過濾 | P0.5 ✅ |
 | 擴充 COBRANDED_RETAILER_SIGNALS | 寶雅、燦坤、新光三越等聯名卡通路 | P0.5 ✅ |
-| Merchant Registry（contracts） | ✅ 已完成 — 83 筆 merchant，VENUE/PAYMENT condition type 遷移完成 | P0.5 ✅ |
+| Merchant Registry（contracts） | ✅ 已完成 — 170+ 筆 merchant（含 14 飯店品牌），前端動態引用，VENUE/PAYMENT condition type 遷移完成 | P0.5 ✅ |
 | `stackability` 顯式欄位 | 拆出 SQLite 欄位，取代 `raw_payload_enums` 還原 | — |
 | `POINTS` 折現規則 | 銀行別點數折現率（目前各銀行點數價值不同） | — |
 | 商業化 | API Key + Rate Limiting、聯盟行銷、Stripe Billing | 資料品質達標 |
