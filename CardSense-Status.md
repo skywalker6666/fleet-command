@@ -480,30 +480,33 @@ SQLite → Supabase sync 上線，API prod 從 Supabase 讀取。
 - 推薦結果中標示「此卡僅有通用回饋」（需 P0 泛用回饋標記完成後配合）
 - 卡片詳情頁「此卡目前僅擷取到 N 筆優惠」細化提示
 
-### ➡️ 建議接續項目
+### ➡️ 戰略轉向與接續項目 (Updated 2026-04-08)
 
-依優先順序：
+依優先順序（聚焦於高階算卡與獨家運算能力，暫緩純廣泛與傳統介面）：
 
-1. **Fubon targeted re-extraction**：補回 INSURANCE/INFINITE/DIGITALLIFE 3 張消失的卡
-4. **P2 聯名卡通用優惠**：評估 bank-wide promotion 擷取方案
-5. **MILES API 支援**：RewardCalculator 新增哩程回饋計算
+1. **`MILES` API 支援與高階點數估值**：RewardCalculator 實作哩程回饋計算與各銀行點數折現，主攻高階旅遊算卡情境（iCard.AI 的盲區）。
+2. **即時匯率引擎 (Exchange Rate Engine)**：建立回饋單位對 TWD 的匯率牌告表，支援玩家自訂匯率覆寫系統預設值，推薦排名依個人價值觀即時洗牌。
+3. **Feedback Widget (Discord 整合)**：實作前端錯誤回報表單並打入 Discord webhook，以群眾外包修正 Extractor 邊緣情境缺漏。
+4. **我的卡包 (My Wallet Mode)**：前端支援勾選持有卡片，DecisionEngine 優先從持卡庫推薦，並量化計算辦新卡的「利差」。
+5. **`/calc` 社群工具生成極致化**：完善 Canvas 分享圖，針對保費、日韓高消等極端情境做深，成為論壇算卡首選截圖來源。
+6. **Checkout Widget (B2B2C API)** (中長期)：規劃可嵌入第三方電商的 CardSense 結帳推薦外掛。
 
-### 後續待辦
+### 後續待辦狀態調整
 
-| 項目 | 說明 | 前置條件 |
-|------|------|----------|
-| Fubon targeted re-extraction | 補回 INSURANCE/INFINITE/DIGITALLIFE | — |
-| `MILES` API 支援 | RewardCalculator 新增哩程回饋計算 | — |
-| 日期 condition API 過濾 | DecisionEngine 支援 DAY_OF_MONTH / DAY_OF_WEEK 過濾 | P0.5 ✅ |
-| 擴充 COBRANDED_RETAILER_SIGNALS | 🟢 飯店/餐廳已擴充至 26+ 場所；寶雅、燦坤、新光三越等聯名通路尚未加入 | P0.5 ✅ |
-| Merchant Registry（contracts） | ✅ 已完成 — 157 筆 merchant + 26+ COBRANDED 場所（含 35+ 飯店/餐廳品牌），前端動態引用，VENUE/PAYMENT 遷移 + TRAVEL category + taxonomy 整合完成 | P0.5 ✅ |
-| Subcategory→Category Remap | ✅ 已完成 — HOTEL/TRAVEL_PLATFORM/TRAVEL_AGENCY→TRAVEL、GAS_STATION/EV_CHARGING/PARKING/AIRLINE→TRANSPORT、HOME_LIVING→SHOPPING | P0.6 ✅ |
-| `stackability` 顯式欄位 | 拆出 SQLite 欄位，取代 `raw_payload_enums` 還原 | — |
-| `POINTS` 折現規則 | 銀行別點數折現率（目前各銀行點數價值不同） | — |
-| 商業化 | API Key + Rate Limiting、聯盟行銷、Stripe Billing | 資料品質達標 |
-| Taxonomy + Merchant DB 化 | category/subcategory/merchant 搬進 Supabase，提供管理後台 | 商業化階段 |
-| `/calc` 社群投放 | PTT、Dcard、Facebook 信用卡社團 | 資料品質達標 |
-| 新銀行擴充 | MEGA / FIRST / SINOPAC / TPBANK / UBOT | 既有 5 家品質穩定後 |
+| 項目 | 狀態/優先級 | 說明 |
+|------|-------------|------|
+| **`MILES` / `POINTS` 深度計算** | 🔥 P0 (進行中) | RewardCalculator 新增哩程回饋與高階點數價值折算 |
+| **即時匯率引擎 (Exchange Rate)** | 🔥 P0 (即將開始) | 回饋單位台幣估值牌告 + 玩家自訂匯率覆寫，排名動態洗牌 |
+| **我的卡包 (My Wallet)** | 🔥 P0 (即將開始) | 將平台從「全網比價」轉向「個人持卡最佳化與利差估算」 |
+| **Feedback Widget** | 🟡 P1 (準備中) | 用戶報錯迴圈，低成本防堵 Extractor / Heuristics 漏洞 |
+| 日期 condition API 過濾 | 🟡 P1 | DecisionEngine 支援 DAY_OF_MONTH / DAY_OF_WEEK 過濾 |
+| `stackability` 顯式欄位 | 🟢 P2 | 拆出 SQLite 欄位，取代 `raw_payload_enums` 還原 |
+| 擴充 COBRANDED_RETAILER_SIGNALS | 🟢 P2 | 持續擴充實體聯名通路，不盲目追求冷門邊緣卡 |
+| Fubon targeted re-extraction | 🟢 P2 | 補回 INSURANCE/INFINITE/DIGITALLIFE 3 張卡 |
+| `/calc` 社群投放 | 🚀 隨機進行 | 定期於 PTT、Dcard 回文投放高水準的算卡比較圖 |
+| **API 商業化 (Stripe Billing)** | ⏸️ 暫緩 | 延後，先以 `/calc` 擴散與 B2B Widget 建立不可替代性為主 |
+| **新銀行擴充 (MEGA / FIRST等)** | ⏸️ 暫緩 | 凍結廣度擴張，先靠主力 5 家銀行打通「我的卡包」完整體驗 |
+| **傳統卡片目錄/介紹頁深度優化** | ⏸️ 暫緩 | 維持堪用即可，不與純內容行銷比價網做靜態頁面競賽 |
 
 ---
 

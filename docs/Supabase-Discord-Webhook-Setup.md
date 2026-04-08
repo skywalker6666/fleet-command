@@ -4,6 +4,19 @@
 
 ---
 
+## 步驟零：開啟儲存桶 (Storage) 放截圖
+
+由於這次更新加入了圖片上傳，請先完成儲存空間的設定：
+1. 進入 Supabase 首頁側邊欄點選 **Storage**。
+2. 點擊 **New Bucket**，名字取作 `feedback-images`。
+3. **重要**：勾選 `Public bucket` (公開)，讓 Discord 也能讀取到這張圖片，然後按下 Save。
+4. 點選建立好的 `feedback-images` 桶子，切換到 **Policies** 標籤頁。
+5. 點擊 **New policy** -> **For full customization**
+6. 給個名字 (例如：`Allow anonymous uploads`)，在 **Allowed operations** 勾選 `INSERT`。
+7. 其他都不用填，直接按下 **Save policy**。這樣前端就能無密碼丟圖片進來了！
+
+---
+
 ## 步驟一：在 Supabase 建立 `feedbacks` 資料表
 
 請進入您的 Supabase 專案，左側選單點擊 **SQL Editor**，開一個新的 Query，貼上並執行以下 SQL 語法：
@@ -79,13 +92,16 @@ WITH CHECK (true);
         {
           "name": "回報畫面 (URL)",
           "value": "[點我重現操作現場]({{record.context.url}})",
-          "inline": false
+          "inline": true
         },
         {
           "name": "📝 使用者描述",
           "value": "{{record.description}}"
         }
-      ]
+      ],
+      "image": {
+        "url": "{{record.context.screenshot_url}}"
+      }
     }
   ],
   "username": "CardSense 偵錯員",

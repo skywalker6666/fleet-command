@@ -33,18 +33,19 @@
 
 | 用戶類型 | 角色 | 需求 | 付費意願 |
 |---------|------|------|---------|
-| **B2B：金融科技 App** | 整合方 | 嵌入推薦功能到自家 App | 高（API 訂閱） |
-| **B2B：記帳軟體** | 整合方 | 消費後顯示「你該用哪張卡」 | 高 |
-| **B2C：比較網站** | 直接用戶 | 查詢當前最佳刷卡方案 | 中（Freemium） |
-| **B2B2C：聯盟行銷** | 流量方 | 導流到銀行申卡頁賺佣金 | — (revenue share) |
+| **B2B2C：電商與旅行社** | 整合方 | 在結帳頁面嵌入 CardSense Widget 提示最佳結帳卡 | 中（Affiliate Share） |
+| **B2C：高階算卡玩家** | 直接用戶 | 精確計算飯店、機票、特定通路疊加後能獲得多少點數/哩程 | 高（高互動） |
+| **B2B：記帳軟體** | 整合方 | 嵌入推薦 API，分析用戶開銷並展示「辦這張卡可省多少」 | 高（API 訂閱） |
+| **B2C：一般大眾** | 流量方 | 查詢自己錢包裡哪張卡最好 (`My Wallet` 模式) | — (帶流量) |
 
 ### 1.6 產品入口與頁面分工
 
-| 路徑 | 角色 | 目標 | 主要依賴 |
+| 路徑/介面 | 角色 | 目標 | 主要依賴 |
 |------|------|------|----------|
-| `/calc` | 社群傳播入口 | 用「刷錯卡的年度損失」製造痛感，提升分享率與導流率 | `GET /v1/cards`、`POST /v1/recommendations/card` |
-| `/` | 完整推薦工具 | 讓用戶完成當下消費決策，顯示完整推薦理由與優惠細節 | `POST /v1/recommendations/card` |
-| `/cards` | 卡片目錄 | 提供卡片瀏覽、篩選與申辦入口 | `GET /v1/cards` |
+| `/calc` | 社群計算器 | 針對高消/複雜情境（哩程、保費）提供一鍵分析圖，主打社群分享裂變 | `POST /v1/recommendations/card` |
+| 我的卡包 (My Wallet) | 核心依賴轉換 | 把比價轉向「持卡最佳化」，讓用戶只需關心自己的小範圍卡庫 | `POST /v1/recommendations/card` (加卡片過濾) |
+| Checkout Widget | B2B2C 獲客點 | 做成供第三方電商結帳頁嵌入的 Snippet，在交易當下提醒省錢 | `POST /v1/recommendations/card` |
+| `/cards` 與 `/` | 基礎目錄 (維持堪用) | 滿足基礎查閱與 SEO，不花費過多精力包裝 | `GET /v1/cards` |
 
 > `/calc` 的詳細互動、SEO、分享與元件規格，另見 `fleet-command/CardSense-Demo-Spec.md`，主規格只保留產品定位、KPI 與系統邊界。
 
@@ -57,21 +58,20 @@
 ```
 Revenue Streams
 │
-├── 1️⃣ API 訂閱 (B2B 主力)
-│   ├── Free: 100 calls/day
-│   ├── Starter: $29/mo — 5K calls/day
-│   ├── Growth: $99/mo — 50K calls/day
-│   └── Enterprise: Custom — 無限 + SLA
+├── 1️⃣ 嵌入式聯盟導購 (B2B2C Checkout Widget 主力)
+│   ├── 在合作品牌結帳頁面攔截精準流量
+│   ├── 展示「刷這張立刻省 X 元」
+│   └── 若無卡則導向辦理最優卡片，分潤 (CPA)
 │
-├── 2️⃣ 聯盟行銷 (B2C 附加)
-│   ├── 推薦結果附帶申卡連結
-│   ├── 用戶申卡成功 → 銀行付佣 (CPA)
-│   └── 預估 $5-20/成功申卡
+├── 2️⃣ 高階工具與我的卡包 (B2C 附加)
+│   ├── My Wallet (我的卡包) 黏著度引流
+│   ├── 進階點數估值/哩程兌換規劃
+│   └── 產生辦卡「利差」說服辦卡
 │
-└── 3️⃣ 數據洞察 (Phase 4)
-    ├── 匿名化消費趨勢報告
-    ├── 銀行可購買市場分析
-    └── 需 PDPA 合規審查
+└── 3️⃣ API 訂閱與數據 (中後期)
+    ├── Fintech / 記帳 App 介接推薦技術
+    ├── 提供 Rate Limit Tier 商業租賃
+    └── 匿名化消費趨勢報告
 ```
 
 ### 2.2 關鍵指標
@@ -109,10 +109,10 @@ Revenue Streams
 | 階段 | 時間 | 目標 | Go/No-Go |
 |------|------|------|----------|
 | Phase 0 (✅完成) | Sprint 0 | 3-repo 架構、contracts 定義 | ✅ |
-| Phase 1 | Month 1-2 | 5 家銀行資料、API MVP 上線 | 能穩定回傳推薦 |
-| Phase 2 | Month 3-4 | 10 家銀行、3 個 B2B 客戶、完整推薦頁穩定 | 有人願意付費 |
-| Phase 3 | Month 5-8 | $500 MRR、聯盟行銷上線、`/calc` 社群入口導流 | 持續增長 |
-| Phase 4 | Month 9+ | $2K MRR、數據洞察產品 | — |
+| Phase 1 (✅完成) | Month 1-2 | 5 大銀行資料、API MVP、極端情境運算上線 | Engine 邏輯重現度達標 |
+| Phase 2 (P0)     | Month 3-4 | 上線 My Wallet、MILES 精算、Discord 報錯機制 | 於 PTT/Dcard 產生自發裂變 |
+| Phase 3 (P1)     | Month 5-8 | 開發 Checkout Widget，爭取第一家電商/平台嵌入 | 有首發合作夥伴 |
+| Phase 4          | Month 9+  | $2K MRR (聯盟行銷與 API 混合)、探索訂閱制 | — |
 
 ---
 
@@ -293,7 +293,8 @@ public record RecommendationRequest(
     Integer amount,         // 消費金額 (TWD)
     List<String> cardCodes, // 用戶持有的卡片代碼 (optional, 空 = 全部)
     String location,        // 消費地點 (optional)
-    LocalDate date          // 消費日期 (optional, default = today)
+    LocalDate date,         // 消費日期 (optional, default = today)
+    Map<String, BigDecimal> customExchangeRates // 用戶自訂匯率 (optional, 可覆寫系統預設哩程與點數估值)
 ) {}
 
 // === Response ===
@@ -364,6 +365,35 @@ public List<CardRecommendation> recommend(RecommendationRequest req) {
         .toList();
 }
 ```
+
+### 4.4 即時匯率與價值轉換引擎 (Exchange Rate Engine)
+
+為支援高階算卡玩家的差異化體驗，系統內建了回饋單位的「台幣價值（NTD Valuation）」匯率板：
+
+**系統預設匯率牌告**：由 `RewardCalculator` 內的 `getMileValueRate()` / `getPointValueRate()` 提供保守預設值，涵蓋各銀行的點數與哩程對台幣換算率。
+
+| 回饋單位 | 預設估值 (TWD) | 備註 |
+|---------|---------------|------|
+| 中信 LINE Points | 1.0 | 1:1 折抵 |
+| 國泰小樹點 | 1.0 | 1:1 折抵 |
+| 台新 DAWHO 幣 | 1.0 | 1:1 折抵 |
+| 玉山 e point | 1.0 | 1:1 折抵 |
+| 富邦 mmo 幣 | 1.0 | 1:1 折抵 |
+| 航空哩程 (預設) | 0.40 | 保守估值，經濟艙兌換基準 |
+
+**玩家自訂匯率 (Custom Rates)**：玩家可透過前端 UI 輸入自己心目中的點數/哩程價值（例如：「我覺得長榮哩程值 0.6 元」）。API 在 `RecommendationRequest` 中接收 `customExchangeRates` 後，會覆寫系統預設值，使排名演算法依照玩家的個人價值觀重新洗牌。
+
+```
+使用者心中匯率不同 → 排名不同
+
+玩家 A（常換頭等艙）：1 哩 = 0.6 TWD → 哩程卡排名 ↑↑↑
+玩家 B（只換經濟艙）：1 哩 = 0.3 TWD → 現金回饋卡排名 ↑↑↑
+```
+
+**前端呈現**：
+- 推薦結果頁面頂部顯示「匯率牌告」跑馬燈，強化專業精算品牌形象
+- `/calc` 進階選項中提供「自訂點數價值」折疊面板
+- 推薦結果的 `estimatedReturn` 統一以 TWD 呈現，並附註所使用的匯率
 
 ---
 
@@ -509,10 +539,10 @@ DataExtractor (事件觸發)
 
 | 階段 | 成功條件 | 退出條件 |
 |------|---------|---------|
-| Phase 1 | 5 家銀行 / 穩定 API / < 100ms P50 | 2 個月後 extraction 準確率 < 80% |
-| Phase 2 | 3 個付費 B2B 客戶 | 4 個月 0 付費客戶 |
-| Phase 3 | $500 MRR + 聯盟行銷收入 | 6 個月 < $200 MRR |
-| Phase 4 | $2K MRR, 20+ 家銀行覆蓋 | 連續 3 個月下滑 |
+| Phase 1 | 5 家銀行支援 / 穩定 API (< 100ms) / 疊加正確 | Extraction 準確率長期落後無法收斂 |
+| Phase 2 | /calc 成功在特定社群產生討論與分享案例 | 上線 My Wallet 無法提升用戶回訪與依賴 |
+| Phase 3 | 成功談成至少一家 Widget 平台合作 | 轉換率過低，或無法透過導流拿到 CPA |
+| Phase 4 | 穩定產生 $2K 收入 (首刷分潤與 API 訂閱) | 連續 3 個月下滑或停滯 |
 
 ### 每周時間投入
 - 目標：**8-10 hr/week**（所有專案中最高）

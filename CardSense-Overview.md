@@ -51,7 +51,7 @@ CardSense 是一個以**情境式卡片比較**為核心的信用卡推薦平台
 - ✅ **TAISHIN（台新）** — Cloudflare Browser Rendering + HTML 抽取
 - ✅ **FUBON（富邦）** — Cloudflare Browser Rendering + HTML 抽取
 - ✅ **CTBC（中信）** — Playwright + JSON API 抽取
-- — MEGA / FIRST / SINOPAC / TPBANK / UBOT（Backlog，待既有 5 家資料品質提升後）
+- — MEGA / FIRST / SINOPAC / TPBANK / UBOT（⏸️ 任務暫緩，優先擴展既有 5 大銀行在「我的卡包」與「哩程計算」之深度體驗）
 
 ## 已完成里程碑
 
@@ -111,17 +111,20 @@ CardSense 是一個以**情境式卡片比較**為核心的信用卡推薦平台
 
 **➡️ 接續重點**：P1 核心審查 → Fubon targeted re-extraction → P2 bank-wide promotion → MILES API 支援
 
-### 後續待辦
+### 後續待辦狀態調整
 
-| 項目 | 前置條件 |
-|------|----------|
-| Fubon targeted re-extraction | — |
-| `MILES` API 支援 | — |
-| `stackability` 顯式欄位 | — |
-| `POINTS` 銀行別折現規則 | — |
-| 商業化（API Key / Rate Limiting / Stripe） | 資料品質達標 |
-| `/calc` 社群投放 | 資料品質達標 |
-| 新銀行擴充（MEGA / SINOPAC / ...） | 既有 5 家品質穩定 |
+| 項目 | 狀態/優先級 | 說明 |
+|------|-------------|------|
+| **`MILES` / `POINTS` 深度計算** | 🔥 P0 (進行中) | RewardCalculator 新增哩程回饋與高階點數折算 |
+| **即時匯率引擎 (Exchange Rate)** | 🔥 P0 (即將開始) | 回饋單位台幣估值牌告 + 玩家自訂匯率覆寫，排名動態洗牌 |
+| **我的卡包 (My Wallet Mode)** | 🔥 P0 (即將開始) | 從全網比價轉向「持卡最佳化與新卡利差計算」 |
+| **Feedback Widget (Discord)** | 🟡 P1 (準備中) | 用戶報錯前端整合，低成本防堵 Extractor 漏洞 |
+| 日期 condition API 過濾 | 🟡 P1 | DecisionEngine 支援 DAY_OF_MONTH / DAY_OF_WEEK 過濾 |
+| `stackability` 顯式欄位 | 🟢 P2 | 拆出 SQLite 欄位，取代 `raw_payload_enums` 還原 |
+| Fubon targeted re-extraction | 🟢 P2 | 補回 INSURANCE/INFINITE/DIGITALLIFE 3 張卡 |
+| 擴充聯名通路 (COBRANDED) | 🟢 P2 | 持續擴充實體聯名通路，但不追求冷門邊緣卡 |
+| API 商業化 (Stripe Billing) | ⏸️ 暫緩 | 延後，先以 `/calc` 擴散與 B2B Widget 建立不可替代性 |
+| 新銀行擴充 (MEGA / FIRST等) | ⏸️ 暫緩 | 凍結廣度擴張，先靠主力銀行打通高階算卡與卡包體驗 |
 
 ## 快速開始
 
