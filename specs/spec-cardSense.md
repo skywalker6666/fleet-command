@@ -43,6 +43,7 @@
 | 路徑/介面 | 角色 | 目標 | 主要依賴 |
 |------|------|------|----------|
 | `/calc` | 社群計算器 | 針對高消/複雜情境（哩程、保費）提供一鍵分析圖，主打社群分享裂變 | `POST /v1/recommendations/card` |
+| 推薦頁匯率牌告板 | RecommendationForm drawer | Trigger button + 右側 drawer 的 dense 匯率板，展示 `POINTS` / `MILES` 區塊；`/calc` 先不接入 | `POST /v1/recommendations/card` |
 | 我的卡包 (My Wallet) | 核心依賴轉換 | 把比價轉向「持卡最佳化」，讓用戶只需關心自己的小範圍卡庫 | `POST /v1/recommendations/card` (加卡片過濾) |
 | Checkout Widget | B2B2C 獲客點 | 做成供第三方電商結帳頁嵌入的 Snippet，在交易當下提醒省錢 | `POST /v1/recommendations/card` |
 | `/cards` 與 `/` | 基礎目錄 (維持堪用) | 滿足基礎查閱與 SEO，不花費過多精力包裝 | `GET /v1/cards` |
@@ -368,37 +369,16 @@ public List<CardRecommendation> recommend(RecommendationRequest req) {
 
 ### 4.4 即時匯率與價值轉換引擎 (Exchange Rate Engine)
 
-為支援高階算卡玩家的差異化體驗，系統內建了回饋單位的「台幣價值（NTD Valuation）」匯率板：
+這是 CardSense 的差異化核心之一。它解決的是：「同一張卡的回饋，對不同使用者到底值多少？」以及「點數 / 哩程如何在推薦演算法中被正確量化？」的問題。
 
-**系統預設匯率牌告**：由 `RewardCalculator` 內的 `getMileValueRate()` / `getPointValueRate()` 提供保守預設值，涵蓋各銀行的點數與哩程對台幣換算率。
-
-| 回饋單位 | 預設估值 (TWD) | 備註 |
-|---------|---------------|------|
-| 中信 LINE Points | 1.0 | 1:1 折抵 |
-| 國泰小樹點 | 1.0 | 1:1 折抵 |
-| 台新 DAWHO 幣 | 1.0 | 1:1 折抵 |
-| 玉山 e point | 1.0 | 1:1 折抵 |
-| 富邦 mmo 幣 | 1.0 | 1:1 折抵 |
-| 航空哩程 (預設) | 0.40 | 保守估值，經濟艙兌換基準 |
+目前實作已落地到推薦頁的 trigger button + 右側 drawer 匯率牌告板，板內分成 `POINTS` / `MILES` 兩個 section；`/calc` 整合仍保留在後續迭代。
 
 **玩家自訂匯率 (Custom Rates)**：玩家可透過前端 UI 輸入自己心目中的點數/哩程價值（例如：「我覺得長榮哩程值 0.6 元」）。API 在 `RecommendationRequest` 中接收 `customExchangeRates` 後，會覆寫系統預設值，使排名演算法依照玩家的個人價值觀重新洗牌。
 
-```
-使用者心中匯率不同 → 排名不同
-
-玩家 A（常換頭等艙）：1 哩 = 0.6 TWD → 哩程卡排名 ↑↑↑
-玩家 B（只換經濟艙）：1 哩 = 0.3 TWD → 現金回饋卡排名 ↑↑↑
-```
-
-**前端呈現**：
-- 推薦結果頁面頂部顯示「匯率牌告」跑馬燈，強化專業精算品牌形象
-- `/calc` 進階選項中提供「自訂點數價值」折疊面板
-- 推薦結果的 `estimatedReturn` 統一以 TWD 呈現，並附註所使用的匯率
-
----
-
-## 5. LLM 策略
-
+**前端互動現況**：
+- `RecommendationForm` 已使用 trigger button 開啟右側 drawer，先展示 dense 匯率牌告板。
+- 牌告板以 `POINTS` / `MILES` 分 section 顯示，沿用既有 `unit`、`note`、`exchangeRateSource` 與 `customExchangeRates`。
+- `/calc` 仍保留為下一階段的共用入口，分享圖與更細的 program-level explainability 尚待補強。
 ### 5.1 LLM 使用邊界
 
 ```

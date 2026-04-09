@@ -36,22 +36,32 @@
 - [x] `recommendation-response.schema.json` 支援 `rewardDetail`
 - [x] recommendation request / response example 已同步更新
 
-### 2.3 Web 已完成
+### 2.3 Web 撌脣???
 
-- [x] 推薦表單整合 `ExchangeRatesPanel`
-- [x] 使用者可覆寫預設匯率後送至推薦 API
-- [x] 推薦結果優惠明細顯示 `rawReward × exchangeRate`
-- [x] `MILES` / `POINTS` 的提示文案與顯示格式已補齊
-- [x] Card detail 頁可正確顯示 `MILES`
+- [x] ?刻銵典?游? `ExchangeRatesPanel`
+- [x] 雿輻?閬神?身?舐?敺?刻 API
+- [x] ?刻蝯??芣??敦憿舐內 `rawReward ? exchangeRate`
+- [x] `MILES` / `POINTS` ??蝷箸?獢?憿舐內?澆?撌脰?朣?
+- [x] Card detail ?甇?Ⅱ憿舐內 `MILES`
+- [x] RecommendationForm 已改成 trigger button + right-side drawer，內含 dense 匯率牌告板
+- [x] 匯率牌告板已分成 `POINTS` / `MILES` 兩個 section
 
-### 2.4 仍待補強
+### 2.4 隞?鋆撥
 
-- [ ] 更細緻的銀行別 / 航空計畫估值模型
-- [ ] `/calc` 分享圖顯示本次使用匯率
-- [ ] 更明確的「匯率牌告板」展示樣式
+- [ ] 高階點數 / 哩程估值再細化，補齊銀行別與航空計畫 program-level 估值
+- [ ] `/calc` 接入同一套匯率牌告板
+- [ ] 分享圖顯示本次使用匯率與估值來源
+
+### 2.5 已上線的推薦頁匯率板
+
+RecommendationForm 先以 trigger button 開啟右側 drawer，讓使用者在推薦頁直接調整匯率估值，不必先進 `/calc`。
+
+- `POINTS` / `MILES` 已以 section 分組，保留 `_DEFAULT` 與銀行 / 計畫別 row
+- row 內仍沿用 `unit`、`note`、`exchangeRateSource`、`customExchangeRates`
+- `/calc` 的整合與分享圖聯動保留到下一階段
+- 更細的 program-level explainability 仍是後續項目
 
 ---
-
 ## 3. 匯率資料結構
 
 目前系統使用 `cardsense-api/src/main/resources/exchange-rates.json`：
