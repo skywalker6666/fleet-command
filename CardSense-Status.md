@@ -49,10 +49,10 @@ CardSense 是一個以**情境式卡片比較**為核心的信用卡推薦平台
 
 | 模組 | 狀態 | 說明 |
 |------|------|------|
-| cardsense-contracts | ✅ 完成 | Promotion / Recommendation / Stackability schema 穩定，9 大消費類別（新增 TRAVEL 旅遊）、merchant registry（190+ 筆，含 35+ 飯店/餐廳品牌）、subcategory→category 自動重映射、taxonomy 整合完成，前端透過 Vite alias 動態引用 taxonomy JSON |
+| cardsense-contracts | ✅ 完成 | Promotion / Recommendation / Stackability schema 穩定，9 大消費類別（新增 TRAVEL 旅遊）、merchant registry（190+ 筆，含 35+ 飯店/餐廳品牌）、subcategory→category 自動重映射、taxonomy 整合完成；Recommendation contracts 已支援 `MILES`、`customExchangeRates`、`rewardDetail` |
 | cardsense-extractor | ✅ 核心完成 | E.SUN + Cathay + TAISHIN + FUBON + CTBC real extractor、subcategory inference、subcategory→category remap、JSONL + SQLite 匯入、refresh_and_deploy |
-| cardsense-api | ✅ 核心完成 + 已部署 | 情境推薦、疊加優惠計算、break-even、subcategory 場景過濾、scope/eligibilityType/通路 condition 匹配；VENUE 跨類別匹配（hotel brand 同時命中 DINING + TRAVEL）；Render 上線 |
-| cardsense-web | ✅ MVP 完成 + 已部署 | 推薦表單 + 卡片目錄 + SubcategoryGrid 場景選擇 + `/calc` 社群入口頁 + merchantName 輸入/提示 + 深色模式 + RWD + fintech UI |
+| cardsense-api | ✅ 核心完成 + 已部署 | 情境推薦、疊加優惠計算、break-even、subcategory 場景過濾、scope/eligibilityType/通路 condition 匹配；VENUE 跨類別匹配（hotel brand 同時命中 DINING + TRAVEL）；Exchange Rate Engine（`MILES` / `POINTS` 折算、`rewardDetail`、`/v1/exchange-rates`）已上線；Render 上線 |
+| cardsense-web | ✅ MVP 完成 + 已部署 | 推薦表單 + 卡片目錄 + SubcategoryGrid 場景選擇 + `/calc` 社群入口頁 + merchantName 輸入/提示 + 深色模式 + RWD + fintech UI；已支援自訂點數/里程估值與 reward detail 顯示；原生 feedback widget 可用 |
 | 資料庫遷移 | ✅ 完成 | SQLite → Supabase sync 已上線；API prod 從 Supabase 讀取 |
 | 銀行擴充 | ✅ Phase 1 完成 | 5 家銀行上線（E.SUN / Cathay / Taishin / Fubon / CTBC），801 筆優惠 |
 | 資料品質 | ✅ P1 完成 | general reward expansion、分類器精確化、Unicard 百大展開、飯店 VENUE 標注、TRAVEL 類別新增、跨類別 VENUE 匹配；9 大消費類別穩定 |
@@ -75,9 +75,13 @@ CardSense 是一個以**情境式卡片比較**為核心的信用卡推薦平台
 
 ### cardsense-web（最活躍）
 
-**Latest**: `b71467a` — add TRAVEL category, remove frontend category overrides
+**Latest**: `14d8a3f` — merge bugfix/exchange-rates-panel-crash
 
 **近期功能迭代**：
+- `14d8a3f` merge: bugfix/exchange-rates-panel-crash
+- `790f3e1` fix: prevent exchange rates panel render crash
+- `4c61c9d` feat: remove debug logging for Supabase environment variables in feedback widget
+- `a8410da` feat(web): integrate exchange rate customization and display reward details
 - `b71467a` feat: add TRAVEL category, remove frontend category overrides — 9 大類別
 - `7fb92ca` chore: trigger redeploy for updated hotel merchants in contracts
 - `6c7e271` fix: remove auto-generated category-level merchant fallbacks
@@ -111,8 +115,11 @@ CardSense 是一個以**情境式卡片比較**為核心的信用卡推薦平台
 - 疊加優惠計算（自動計算所有可疊加優惠總和）
 - 優惠明細展開（逐一列出回饋金額、條件、有效期）
 - 損益平衡分析（疊加模式自動計算兩卡損益平衡消費點）
+- 自訂點數 / 里程價值面板（從 `/v1/exchange-rates` 讀取預設值，僅送出與預設不同的覆寫項）
+- 回饋明細換算顯示（`rawReward × exchangeRate → ntdEquivalent`）
 - 卡片目錄頁（多維篩選：銀行、資格類型、優惠類別、年費區間、推薦範圍；可收合進階篩選；銀行品牌色 + 精選標記 + 空狀態優化）
 - 卡片詳情頁（基本資料 + 優惠資訊依類別分組顯示 + 權益切換提醒 + 一鍵跳轉推薦）
+- 原生 feedback widget（站內回饋表單 + 自動附帶頁面 context + 截圖上傳）
 - 權益切換卡支援（可折疊切換卡狀態控制、merchant picker、benefit tier badges、官方方案名稱對齊）
 - 動態 taxonomy（SUBCATEGORIES、MERCHANT_SUGGESTIONS 從 contracts JSON 自動衍生，`@contracts` Vite alias + `src/lib/taxonomy.ts`，Vercel build 時 shallow-clone contracts repo）
 - 深色模式（跟隨系統偏好，可手動切換）
@@ -128,9 +135,12 @@ CardSense 是一個以**情境式卡片比較**為核心的信用卡推薦平台
 
 ### cardsense-api
 
-**Latest**: `ccbbd7b` — update DB with TRAVEL category and taxonomy consolidation
+**Latest**: `8207abc` — integrate exchange rate engine and update recommendation DTOs
 
 **近期功能迭代**：
+- `8207abc` feat(api): integrate exchange rate engine and update recommendation DTOs
+- `eb1fae4` feat: RewardCalculator MILES/POINTS valuation + Exchange Rate Engine checklist
+- `a889503` feat: support MILES points in RewardCalculator
 - `ccbbd7b` chore: update DB with TRAVEL category and taxonomy consolidation
 - `48bbe1a` feat: bypass category filter when merchant matches VENUE condition — 跨類別 VENUE 匹配
 - `9afb134` refactor: migrate condition types to VENUE/PAYMENT in DecisionEngine and CatalogService
@@ -146,7 +156,8 @@ CardSense 是一個以**情境式卡片比較**為核心的信用卡推薦平台
 
 **核心實作**：
 - `DecisionEngine`（736+ 行）— 確定性推薦邏輯，scenario 解析、promotion 過濾、回饋計算、排序；支援 subcategory 場景過濾、payment method 匹配、benefit tier 運行時覆寫
-- `RewardCalculator` — PERCENT / FIXED / POINTS / MILES 回饋計算，封頂邏輯
+- `RewardCalculator` — PERCENT / FIXED / POINTS / MILES 回饋計算，封頂邏輯，並回傳 `RewardDetail`
+- `ExchangeRateService` — 載入 `exchange-rates.json`、處理 system default 與 `customExchangeRates` 覆寫、供 `/v1/exchange-rates` 與 RewardCalculator 共用
 - `CatalogService` — 卡片目錄查詢，scope-aware（RECOMMENDABLE / CATALOG_ONLY / FUTURE_SCOPE）
 - `SqlitePromotionRepository` / `SupabasePromotionRepository` — 支援 local SQLite 與 prod Supabase 兩種 promotion 來源
 - `CorsConfig` — 前端跨域存取
@@ -287,6 +298,11 @@ recommendation/ → request + response JSON schema 與範例
 taxonomy/      → category / channel / frequency / subcategory / merchant-registry / payment-registry taxonomy
 ```
 
+**Recommendation 契約現況**：
+- `recommendation-request` 已支援 `customExchangeRates`
+- `recommendation-response` 已支援 `rewardDetail`
+- `cashbackType` 已包含 `MILES`
+
 **Stackability Metadata**：描述優惠間的可疊加關係
 - 永遠可疊加
 - 互斥群組
@@ -304,6 +320,7 @@ taxonomy/      → category / channel / frequency / subcategory / merchant-regis
 | GET | `/v1/cards?bank=&status=&scope=&eligibilityType=` | 卡片目錄（支援 eligibilityType 篩選） |
 | GET | `/v1/cards/{cardCode}/promotions` | 卡片優惠列表（依 category 分組） |
 | GET | `/v1/cards/{cardCode}/plans` | 卡片 benefit plan 列表 |
+| GET | `/v1/exchange-rates` | 系統預設點數 / 里程估值牌告 |
 | POST | `/v1/recommendations/card` | 情境推薦 |
 
 **API 方案（Phase 2）**：
@@ -317,12 +334,12 @@ taxonomy/      → category / channel / frequency / subcategory / merchant-regis
 
 ---
 
-## 已知限制（截至 2026-04-08）
+## 已知限制（截至 2026-04-09）
 
 **API**：
 - SQLite repo 從 `raw_payload_json` 還原 `stackability` metadata，尚未拆成顯式欄位
-- `POINTS` 尚未引入銀行別點數折現規則；`MILES` 為新增類型，API 端 `RewardCalculator` 需對應支援
-- Break-even 目前只處理代表 promotion 間的 `FIXED` vs `PERCENT` 比較
+- `POINTS` / `MILES` 已可換算為 TWD，但目前估值粒度仍偏粗，尚未細到更多航空計畫 / 轉點情境
+- Break-even 已可處理代表 promotion 間的 `FIXED` vs `PERCENT` / `POINTS` / `MILES`，但仍屬 pairwise 分析，非完整最佳化模型
 - `STACK_ALL_ELIGIBLE` 仍為 heuristic aggregation，待 `stackability` 標註完整後升級為 deterministic stacking
 
 **Extractor**：
@@ -333,7 +350,7 @@ taxonomy/      → category / channel / frequency / subcategory / merchant-regis
 - Real extractor 依賴外部網站可用性
 
 **Contracts**：
-- `POINTS` 型別尚未定義銀行別點數折現規則；`MILES` 已新增於 extractor 端，contracts schema 需同步
+- `MILES` / `customExchangeRates` / `rewardDetail` 契約已同步，但高階點數與哩程估值表仍會持續演進
 - `stackability` metadata 設計完成，部分銀行的實際標註資料仍在累積中
 
 ---
@@ -375,7 +392,7 @@ SQLite → Supabase sync 上線，API prod 從 Supabase 讀取。
 - Unicard 百大 17→57 筆（3 plans × 19 clusters），全部 RECOMMENDABLE
 - CATHAY_WORLD 專屬優惠 56 筆升級 RECOMMENDABLE（原 44 筆全為 CATALOG_ONLY）
 - 18 張卡仍無 RECOMMENDABLE（多為聯名小卡：學學、南紡、秀泰等）
-- `MILES` 回饋類型已新增於 extractor 端，API 端 RewardCalculator 需對應支援
+- `MILES` 回饋類型已打通 extractor / contracts / API / web，但高階估值仍會持續細化
 - 3 張 Fubon 卡（INSURANCE、INFINITE、DIGITALLIFE）在最新 extraction 中消失，疑似銀行網頁變動
 
 **目標**：讓每張 RECOMMENDABLE 卡在其適用的消費情境中都能公平入榜比較。
@@ -394,7 +411,7 @@ SQLite → Supabase sync 上線，API prod 從 Supabase 讀取。
 - ✅ 低覆蓋卡審查完成：26 張中可修的已修，其餘為 niche 聯名卡（航空/旅遊/車廠/飯店），1-2 筆 RECOMMENDABLE 已合理
 
 **剩餘項目（移至後續待辦）**：
-- `MILES` 類型 API 端 RewardCalculator 支援
+- 更細緻的銀行別點數 / 航空哩程估值模型
 - 3 張消失的 Fubon 卡需 targeted re-extraction
 
 #### P0.5：聯名卡通路 + 日期 Condition 推斷 — ✅ 完成
@@ -475,18 +492,16 @@ SQLite → Supabase sync 上線，API prod 從 Supabase 讀取。
 - ✅ 表單欄位重排 + grouped payment method picker（`8535265`）
 - ✅ Condition badge 跨頁面統一色系（`d9f25aa`）
 - ✅ 卡片詳情頁銀行主題色 header + color-coded badges（`8f6ab8c`）
-
-**待完成**：
-- 推薦結果中標示「此卡僅有通用回饋」（需 P0 泛用回饋標記完成後配合）
-- 卡片詳情頁「此卡目前僅擷取到 N 筆優惠」細化提示
+- ✅ 推薦結果中標示「此卡僅有通用回饋」
+- ✅ 卡片詳情頁提示「此卡目前僅擷取到 N 筆優惠」
 
 ### ➡️ 戰略轉向與接續項目 (Updated 2026-04-08)
 
 依優先順序（聚焦於高階算卡與獨家運算能力，暫緩純廣泛與傳統介面）：
 
-1. **`MILES` API 支援與高階點數估值**：RewardCalculator 實作哩程回饋計算與各銀行點數折現，主攻高階旅遊算卡情境（iCard.AI 的盲區）。
-2. **即時匯率引擎 (Exchange Rate Engine)**：建立回饋單位對 TWD 的匯率牌告表，支援玩家自訂匯率覆寫系統預設值，推薦排名依個人價值觀即時洗牌。
-3. **Feedback Widget (Discord 整合)**：實作前端錯誤回報表單並打入 Discord webhook，以群眾外包修正 Extractor 邊緣情境缺漏。
+1. **`MILES` API 支援與高階點數估值**：基礎能力已落地，下一步是把銀行別點數 / 航空計畫估值做得更細，主攻高階旅遊算卡情境（iCard.AI 的盲區）。
+2. **即時匯率引擎 (Exchange Rate Engine)**：核心能力已上線（`/v1/exchange-rates`、`customExchangeRates`、`rewardDetail`、前端覆寫面板），下一步是深化 `/calc` 與分享圖整合。
+3. **Feedback Widget (Discord / Notion downstream)**：原生前端回報表單已可用，後續再串接 Discord webhook / Notion Database，形成完整資料修正迴圈。
 4. **我的卡包 (My Wallet Mode)**：前端支援勾選持有卡片，DecisionEngine 優先從持卡庫推薦，並量化計算辦新卡的「利差」。
 5. **`/calc` 社群工具生成極致化**：完善 Canvas 分享圖，針對保費、日韓高消等極端情境做深，成為論壇算卡首選截圖來源。
 6. **Checkout Widget (B2B2C API)** (中長期)：規劃可嵌入第三方電商的 CardSense 結帳推薦外掛。
@@ -495,10 +510,10 @@ SQLite → Supabase sync 上線，API prod 從 Supabase 讀取。
 
 | 項目 | 狀態/優先級 | 說明 |
 |------|-------------|------|
-| **`MILES` / `POINTS` 深度計算** | 🔥 P0 (進行中) | RewardCalculator 新增哩程回饋與高階點數價值折算 |
-| **即時匯率引擎 (Exchange Rate)** | 🔥 P0 (即將開始) | 回饋單位台幣估值牌告 + 玩家自訂匯率覆寫，排名動態洗牌 |
+| **`MILES` / `POINTS` 深度計算** | 🔥 P0 (基礎完成，持續細化) | API / contracts / web 已打通，下一步補更細的銀行別 / 航空計畫估值 |
+| **即時匯率引擎 (Exchange Rate)** | 🔥 P0 (基礎完成) | `/v1/exchange-rates`、`customExchangeRates`、`rewardDetail`、前端覆寫面板已上線 |
 | **我的卡包 (My Wallet)** | 🔥 P0 (即將開始) | 將平台從「全網比價」轉向「個人持卡最佳化與利差估算」 |
-| **Feedback Widget** | 🟡 P1 (準備中) | 用戶報錯迴圈，低成本防堵 Extractor / Heuristics 漏洞 |
+| **Feedback Widget** | 🟡 P1 (原生版可用，待串接) | 站內回饋表單已可用，後續串接 Notion / Discord downstream |
 | 日期 condition API 過濾 | 🟡 P1 | DecisionEngine 支援 DAY_OF_MONTH / DAY_OF_WEEK 過濾 |
 | `stackability` 顯式欄位 | 🟢 P2 | 拆出 SQLite 欄位，取代 `raw_payload_enums` 還原 |
 | 擴充 COBRANDED_RETAILER_SIGNALS | 🟢 P2 | 持續擴充實體聯名通路，不盲目追求冷門邊緣卡 |
@@ -582,7 +597,7 @@ npm run dev                                       # http://localhost:5173
 - [CardSense Spec](./specs/spec-cardSense.md) — 完整專案規格說明書
 - [API Implementation Checklist](https://github.com/WaddleStudio/cardsense-api/blob/master/IMPLEMENTATION_CHECKLIST.md) — API 待辦與遷移時機
 
-*Last updated: 2026-04-08（P0.6 subcategory→category remap 完成）*
+*Last updated: 2026-04-09（Exchange Rate Engine 契約 / API / 前端對齊，Feedback Widget 現況同步）*
 
 ## 備註
 

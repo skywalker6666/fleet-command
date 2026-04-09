@@ -1,60 +1,91 @@
 # CardSense — 即時匯率與價值轉換引擎 (Exchange Rate Engine)
-### Version 1.0 | 2026-04-08
+### Version 1.1 | 2026-04-09
 
 ---
 
 ## 1. 目標
 
-讓 CardSense 成為市場上唯一能將**哩程、點數、現金回饋**三種異質回饋單位，統一換算為「**等值台幣 (TWD)**」並跨卡排名的精算工具。
+讓 CardSense 能把 **現金回饋、點數、哩程** 統一轉換成 **等值台幣 (TWD)**，再進行跨卡比較與排序。
 
-### 1.1 解決的問題
+這項能力的核心價值不只是「支援 `MILES`」，而是：
 
-| 問題 | 現狀 | 目標 |
-|------|------|------|
-| 哩程卡 vs 現金回饋卡無法直接比較 | 排名只能按原始數字排序，1 哩 ≠ 1 元 | 統一轉換為 TWD 後精準排名 |
-| 不同玩家對哩程/點數的價值認知不同 | 系統只有一個固定估值 | 玩家可自訂匯率，排名即時洗牌 |
-| 靜態比價網只能寫「最高 X%」 | iCard.AI 等網站無法量化哩程實際價值 | CardSense 即時展示「等值台幣回饋」 |
-
-### 1.2 戰略價值
-
-此功能是 CardSense 相較於 iCard.AI 的**核心護城河**：
-- **技術壁壘**：需要 `RewardCalculator` 的確定性引擎才能做到，靜態網站無法複製
-- **高階用戶黏著性**：哩程玩家會因為「自訂匯率」頻繁回訪調整
-- **品牌定位**：「匯率牌告板」在視覺上立即建立「專業金融工具」的印象
+- 同一個推薦引擎可以直接比較哩程卡與現金回饋卡
+- 玩家可以依自己的估值覆寫系統預設匯率
+- 推薦結果不只回傳總回饋，還能解釋「原始回饋單位 → 匯率 → 等值台幣」的計算過程
 
 ---
 
-## 2. 設計規格
+## 2. 目前落地狀態
 
-### 2.1 匯率資料結構
+截至 2026-04-09，Exchange Rate Engine 已完成核心串接。
+
+### 2.1 API 已完成
+
+- [x] `exchange-rates.json` 作為系統預設匯率表
+- [x] `ExchangeRateService` 載入與管理系統匯率
+- [x] `RewardCalculator` 支援 `POINTS` / `MILES` 轉換為 TWD
+- [x] `RecommendationRequest.customExchangeRates`
+- [x] `RewardDetail` 回傳欄位
+- [x] `GET /v1/exchange-rates`
+- [x] Break-even / cap saturation 計算已納入 `POINTS` / `MILES`
+
+### 2.2 Contracts 已完成
+
+- [x] `promotion-normalized.schema.json` 支援 `MILES`
+- [x] `recommendation-request.schema.json` 支援 `customExchangeRates`
+- [x] `recommendation-response.schema.json` 支援 `rewardDetail`
+- [x] recommendation request / response example 已同步更新
+
+### 2.3 Web 已完成
+
+- [x] 推薦表單整合 `ExchangeRatesPanel`
+- [x] 使用者可覆寫預設匯率後送至推薦 API
+- [x] 推薦結果優惠明細顯示 `rawReward × exchangeRate`
+- [x] `MILES` / `POINTS` 的提示文案與顯示格式已補齊
+- [x] Card detail 頁可正確顯示 `MILES`
+
+### 2.4 仍待補強
+
+- [ ] 更細緻的銀行別 / 航空計畫估值模型
+- [ ] `/calc` 分享圖顯示本次使用匯率
+- [ ] 更明確的「匯率牌告板」展示樣式
+
+---
+
+## 3. 匯率資料結構
+
+目前系統使用 `cardsense-api/src/main/resources/exchange-rates.json`：
 
 ```json
-// exchange-rates.json — 系統預設匯率表
 {
   "version": "2026-04-08",
   "rates": {
     "POINTS": {
       "CTBC":    { "value": 1.0, "unit": "LINE Points",  "note": "1:1 折抵消費" },
-      "CATHAY":  { "value": 1.0, "unit": "小樹點",       "note": "1:1 折抵消費" },
-      "TAISHIN": { "value": 1.0, "unit": "DAWHO 幣",     "note": "1:1 折抵消費" },
-      "ESUN":    { "value": 1.0, "unit": "e point",      "note": "1:1 折抵消費" },
-      "FUBON":   { "value": 1.0, "unit": "mmo 幣",       "note": "1:1 折抵消費" }
+      "CATHAY":  { "value": 1.0, "unit": "小樹點",       "note": "1:1 折抵消費" }
     },
     "MILES": {
-      "_DEFAULT":       { "value": 0.40, "unit": "航空哩程", "note": "保守估值，經濟艙兌換基準" },
-      "EVA_INFINITY":   { "value": 0.50, "unit": "長榮哩程", "note": "亞洲區段經濟艙" },
-      "ASIA_MILES":     { "value": 0.40, "unit": "亞洲萬里通", "note": "國泰/港龍經濟艙" },
-      "JALPAK":         { "value": 0.35, "unit": "JAL 哩程",  "note": "日航經濟艙" }
+      "_DEFAULT":     { "value": 0.40, "unit": "航空哩程", "note": "保守估值" },
+      "ASIA_MILES":   { "value": 0.40, "unit": "亞洲萬里通", "note": "國泰/港龍經濟艙" },
+      "EVA_INFINITY": { "value": 0.50, "unit": "長榮哩程", "note": "亞洲區段經濟艙" }
     }
   }
 }
 ```
 
-### 2.2 API 介面擴充
+### 設計重點
 
-#### Request 擴充
+- `POINTS.{BANK_CODE}`：優先用銀行別估值
+- `MILES._DEFAULT`：提供通用保守估值
+- 若使用者傳入 `customExchangeRates`，優先權高於系統預設值
 
-在 `POST /v1/recommendations/card` 的 request body 中新增 optional 欄位：
+---
+
+## 4. API 契約
+
+### 4.1 Request
+
+`POST /v1/recommendations/card`
 
 ```json
 {
@@ -70,23 +101,23 @@
 }
 ```
 
-**規則**：
-- Key 格式為 `{cashbackType}.{bankCode}` 或 `{cashbackType}._DEFAULT`
-- Value 為玩家認定的 1 單位對應的 TWD 價值
-- 未提供的 key 使用系統預設值
-- `customExchangeRates` 為 optional，不傳則完全使用系統預設
+### 規則
 
-#### Response 擴充
+- Key 格式：`{cashbackType}.{bankCode}` 或 `{cashbackType}._DEFAULT`
+- 目前允許：
+  - `POINTS.XXX`
+  - `MILES.XXX`
+- Value：1 單位回饋對應的 TWD 價值
 
-在 `CardRecommendation` 中新增匯率資訊：
+### 4.2 Response
+
+`CardRecommendation.rewardDetail` / `PromotionRewardBreakdown.rewardDetail`
 
 ```json
 {
-  "cardName": "國泰世華 CUBE 卡",
-  "estimatedReturn": 1600,
   "rewardDetail": {
     "rawReward": 4000,
-    "rawUnit": "MILES",
+    "rawUnit": "航空哩程",
     "exchangeRate": 0.40,
     "exchangeRateSource": "SYSTEM_DEFAULT",
     "ntdEquivalent": 1600,
@@ -95,98 +126,137 @@
 }
 ```
 
-| 欄位 | 型別 | 說明 |
-|------|------|------|
-| `rawReward` | Integer | 原始回饋數量（哩程數 / 點數 / 現金） |
-| `rawUnit` | String | 回饋單位（MILES / POINTS / TWD） |
-| `exchangeRate` | BigDecimal | 使用的匯率 |
-| `exchangeRateSource` | String | `SYSTEM_DEFAULT` 或 `USER_CUSTOM` |
-| `ntdEquivalent` | Integer | 換算後的等值台幣 |
+### 欄位說明
 
-### 2.3 新增 API Endpoint
-
-#### `GET /v1/exchange-rates`
-
-回傳目前系統預設的完整匯率牌告表，供前端渲染「匯率看板」元件。
-
-```json
-{
-  "version": "2026-04-08",
-  "rates": [
-    { "type": "POINTS", "bank": "CTBC", "unit": "LINE Points", "value": 1.0 },
-    { "type": "POINTS", "bank": "CATHAY", "unit": "小樹點", "value": 1.0 },
-    { "type": "MILES", "bank": "_DEFAULT", "unit": "航空哩程", "value": 0.40 }
-  ]
-}
-```
-
----
-
-## 3. 實作計畫
-
-### Phase 1：系統預設匯率 + RewardCalculator 整合 ✅ 已完成基礎
-
-- [x] `RewardCalculator.getMileValueRate()` — 哩程估值（目前回傳 0.40）
-- [x] `RewardCalculator.getPointValueRate()` — 點數估值（目前依銀行回傳 1.0）
-- [ ] 將匯率表抽為外部 JSON 設定檔（`exchange-rates.json`）
-- [ ] 建立 `ExchangeRateService` 統一管理匯率查詢
-
-### Phase 2：API 擴充 + 玩家自訂匯率
-
-- [ ] `RecommendationRequest` 新增 `customExchangeRates` 欄位
-- [ ] `DecisionEngine` 注入匯率 context，傳遞至 `RewardCalculator`
-- [ ] `CardRecommendation` 新增 `rewardDetail` 欄位（rawReward / rawUnit / exchangeRate / ntdEquivalent）
-- [ ] `GET /v1/exchange-rates` endpoint 實作
-- [ ] contracts repo 更新 recommendation-request/response schema
-
-### Phase 3：前端呈現
-
-- [ ] 推薦結果頁「匯率牌告」看板元件
-- [ ] `/calc` 進階選項：「自訂點數/哩程價值」折疊面板 
-- [ ] 推薦結果卡片：顯示 `rawReward` + `exchangeRate` → `ntdEquivalent` 明細
-- [ ] 分享圖（Canvas）中加入使用的匯率標註
-
----
-
-## 4. 前端互動設計
-
-### 4.1 匯率牌告看板
-
-位置：推薦結果頁頂部或側邊欄。以跑馬燈或表格形式顯示：
-
-```
-📊 回饋匯率牌告
-LINE Points = 1.0 TWD | 小樹點 = 1.0 TWD | 航空哩程 = 0.40 TWD
-```
-
-### 4.2 自訂匯率面板
-
-位置：`/calc` 的「進階設定」折疊區。
-
-- 預設收合，點擊展開
-- 每個回饋類型一個 slider 或 input，預填系統預設值
-- 修改後即時觸發重新計算，排名動態更新
-- 顯示提示文字：「哩程價值因兌換方式而異，頭等艙約 0.6-0.8 TWD/哩，經濟艙約 0.3-0.4 TWD/哩」
-
-### 4.3 結果卡片匯率標註
-
-在推薦結果中，回饋型別非 TWD 現金的卡片，追加折行顯示：
-
-```
-預估回饋：4,000 哩 × 0.40 TWD/哩 = 1,600 TWD 等值
-```
-
----
-
-## 5. 與其他功能的關係
-
-| 功能 | 關係 |
+| 欄位 | 說明 |
 |------|------|
-| **MILES 計算** | Exchange Rate Engine 是其直接延伸，將原始哩程數轉為可比較的 TWD |
-| **我的卡包** | 搭配 My Wallet 使用時，玩家可以設定「我的哩程估值」作為個人化錢包的一部分 |
-| **分享圖** | Canvas 分享圖需包含匯率標註，讓社群看到精確的計算依據 |
-| **Checkout Widget** | B2B 場景下使用系統預設匯率即可，不需玩家自訂 |
+| `rawReward` | 原始回饋數量 |
+| `rawUnit` | 原始回饋單位 |
+| `exchangeRate` | 使用的 TWD 匯率 |
+| `exchangeRateSource` | `SYSTEM_DEFAULT` / `USER_CUSTOM` |
+| `ntdEquivalent` | 換算後等值台幣 |
+| `note` | 人類可讀的換算說明 |
+
+### 4.3 牌告 Endpoint
+
+`GET /v1/exchange-rates`
+
+用途：
+
+- 前端渲染匯率面板
+- 顯示目前系統預設估值
+- 作為使用者自訂匯率的 placeholder / baseline
 
 ---
 
-*Owner: Alan | Created: 2026-04-08 | Priority: 🔥 P0*
+## 5. 前端呈現
+
+### 5.1 目前已上線
+
+#### 推薦表單
+
+- 已有「自訂點數與里程價值」折疊面板
+- 由 `ExchangeRatesPanel` 讀取 `/v1/exchange-rates`
+- 只有與預設值不同的項目才會送到 API
+
+#### 推薦結果
+
+- 優惠明細會顯示：
+
+```text
+4,000 航空哩程 × 0.40 TWD
+```
+
+- `CashbackDisplay` 會依 `cashbackType` 顯示：
+  - `% 回饋`
+  - `點數回饋`
+  - `每 X 元 1 哩`
+
+#### Card Detail
+
+- `MILES` 不再被誤當成缺漏型別
+- 點數型優惠也區分：
+  - 固定點數
+  - 百分比點數回饋
+
+### 5.2 尚未完全達標
+
+- 尚未做成獨立的「匯率牌告看板」視覺區塊
+- 尚未把匯率資訊帶進分享圖 / Canvas
+- 尚未對高階哩程玩家提供更細的 program-level explainability
+
+---
+
+## 6. 實作對應
+
+### API
+
+- `ExchangeRateService`
+- `RewardCalculator`
+- `RecommendationRequest.customExchangeRates`
+- `RewardDetail`
+- `ExchangeRateController`
+
+### Web
+
+- `RecommendationForm`
+- `ExchangeRatesPanel`
+- `RecommendationResults`
+- `CardDetailPage`
+
+### Contracts
+
+- `promotion/promotion-normalized.schema.json`
+- `recommendation/recommendation-request.schema.json`
+- `recommendation/recommendation-response.schema.json`
+
+---
+
+## 7. 目前限制
+
+### 7.1 估值粒度仍偏粗
+
+雖然系統已支援 `POINTS` / `MILES`，但目前仍以：
+
+- 銀行別點數估值
+- 通用或少數 program-level 哩程估值
+
+為主，尚未細到：
+
+- 不同兌換艙等
+- 淡旺季
+- 航空聯盟別
+- 點數轉點折損
+
+### 7.2 比較模型仍以 TWD 等值為核心
+
+這是設計上的刻意取捨：
+
+- 優點：推薦可排序、可解釋、可 deterministic
+- 缺點：無法完整表達哩程玩家對「稀缺票價值」的主觀偏好
+
+所以 `customExchangeRates` 會是長期保留的核心能力。
+
+---
+
+## 8. 下一步
+
+1. 補強 `POINTS` / `MILES` 的銀行別與 program-level 估值
+2. 把匯率資訊延伸到 `/calc` 分享圖
+3. 讓使用者在「我的卡包」裡保存個人估值偏好
+4. 視覺上做出更強的「匯率牌告板」金融工具感
+
+---
+
+## 9. 結論
+
+Exchange Rate Engine 已從「概念規格」進入「核心能力已落地」階段。
+
+現在 CardSense 已具備：
+
+- `MILES` / `POINTS` / `TWD` 三類回饋統一排序
+- 系統預設匯率 + 使用者自訂匯率
+- API / contracts / web 三層一致的契約
+- 可解釋的 `rewardDetail`
+
+後續重點不再是「有沒有這個功能」，而是把估值模型做得更細、更像真正高階玩家會用的工具。
