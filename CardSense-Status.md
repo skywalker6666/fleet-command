@@ -499,7 +499,7 @@ SQLite → Supabase sync 上線，API prod 從 Supabase 讀取。
 
 目前產品重心已從「全站卡片推薦」逐步轉向「高價值情境入口 + 個人化工具 + B2B 能力」。以下是接續項目的優先順序：
 
-1. **高階點數 / 哩程估值深化 (`MILES` / `POINTS`)**：`MILES` API、基礎估值與 `rewardDetail` 已落地；目前已補上 profile-aware 哩程估值解析，會依 `cardCode` / `cardName` / `title` / `conditions` 命中如 `ASIA_MILES`、`EVA_INFINITY` 等 program row，下一步再擴更多航空計畫與轉點情境。
+1. **高階點數 / 哩程估值深化 (`MILES` / `POINTS`)**：`MILES` API、基礎估值與 `rewardDetail` 已落地；目前已補上 profile-aware 哩程估值解析，會依 `cardCode` / `cardName` / `title` / `conditions` 命中如 `ASIA_MILES`、`EVA_INFINITY`、`JALPAK` 等 program row，也已涵蓋 `Cathay Pacific` / `Japan Airlines` 這類 alias 訊號，下一步再擴更多航空計畫與轉點情境。
 2. **即時匯率引擎 (Exchange Rate Engine)**：核心能力已上線（`/v1/exchange-rates`、`customExchangeRates`、`rewardDetail`、前端覆寫面板），目前已形成雙入口：推薦頁為 trigger button + right-side drawer 的 dense 匯率牌告板，`/calc` 則為左欄 inline 工具面板，分享圖也已帶入本次估值來源摘要；推薦結果已補上換算式、估值來源與 note，牌告板 row 也已補上來源類型與 context，下一步聚焦更細的估值 explainability。
 3. **Feedback Widget (Discord / Notion downstream)**：原生前端回報表單已可用，後續再串接 Discord webhook / Notion Database，形成完整資料修正迴圈。
 4. **我的卡包 (My Wallet Mode)**：前端已具備持卡勾選與結果過濾基礎，DecisionEngine 也可優先從持卡庫推薦；下一步是補齊長期保存、利差估算與回訪工作流。
@@ -509,7 +509,7 @@ SQLite → Supabase sync 上線，API prod 從 Supabase 讀取。
 
 | 項目 | 狀態/優先級 | 說明 |
 |------|-------------|------|
-| **高階點數 / 哩程估值深化 (`MILES` / `POINTS`)** | 🔥 P0 (基礎完成，持續細化) | API / contracts / web 已打通，推薦頁已落地 drawer 版匯率牌告板；`RewardCalculator` / `ExchangeRateService` 已能依 promotion metadata 命中 miles profile row，下一步補更多航空計畫 / 轉點情境與 explainability |
+| **高階點數 / 哩程估值深化 (`MILES` / `POINTS`)** | 🔥 P0 (基礎完成，持續細化) | API / contracts / web 已打通，推薦頁已落地 drawer 版匯率牌告板；`RewardCalculator` / `ExchangeRateService` 已能依 promotion metadata 與 airline alias 命中 miles profile row，下一步補更多航空計畫 / 轉點情境與 explainability |
 | **即時匯率引擎 (Exchange Rate)** | 🔥 P0 (基礎完成) | `/v1/exchange-rates`、`customExchangeRates`、`rewardDetail`、推薦頁 drawer/board、`/calc` inline 工具面板、分享圖估值來源摘要與推薦結果換算式/來源 note 已上線；下一步補更細估值說明 |
 | **我的卡包 (My Wallet)** | 🔥 P0 (已啟動，待深化) | 前端持卡勾選與持卡優先推薦已到位，下一步補齊保存偏好、利差估算與回訪體驗 |
 | **Feedback Widget** | 🟡 P1 (原生版可用，待串接) | 站內回饋表單已可用，後續串接 Notion / Discord downstream |

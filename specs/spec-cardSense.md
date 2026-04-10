@@ -378,7 +378,7 @@ public List<CardRecommendation> recommend(RecommendationRequest req) {
 **前端互動現況**：
 - `RecommendationForm` 已使用 trigger button 開啟右側 drawer，先展示 dense 匯率牌告板。
 - 牌告板以 `POINTS` / `MILES` 分 section 顯示，板面目前會顯示來源類型、context、`note` 與估值輸入。
-- `/calc` 已補上分享圖中的估值來源摘要；推薦結果也已顯示 `rewardDetail` 的換算式、估值來源與 note。API 端目前也已能依 promotion metadata 命中首批 miles profile row（如 `ASIA_MILES`、`EVA_INFINITY`），更完整的 program-level explainability 仍待補強。
+- `/calc` 已補上分享圖中的估值來源摘要；推薦結果也已顯示 `rewardDetail` 的換算式、估值來源與 note。API 端目前也已能依 promotion metadata 與 airline alias 命中首批 miles profile row（如 `ASIA_MILES`、`EVA_INFINITY`、`JALPAK`），更完整的 program-level explainability 仍待補強。
 
 ```text
 使用者心中匯率不同 -> 排名不同
