@@ -37,8 +37,8 @@ CardSense 是一個以**情境式卡片比較**為核心的信用卡推薦平台
 |------|------|------|
 | cardsense-contracts | ✅ 完成 | Promotion / Recommendation schema 穩定，含 Stackability metadata |
 | cardsense-extractor | ✅ 核心完成 | 5 家銀行 real extractor（E.SUN / Cathay / Taishin / Fubon / CTBC）、JSONL + SQLite + Supabase sync |
-| cardsense-api | ✅ 核心完成 | 情境推薦、疊加優惠計算（STACK_ALL_ELIGIBLE）、break-even、benefit plan 權益切換、subcategory 過濾、scope 過濾、Supabase 讀取 |
-| cardsense-web | ✅ MVP Live | 推薦頁、卡片目錄、卡片詳情、`/calc` 社群入口頁、FilterChip 設計系統、touch target token、RWD + a11y 最佳化 |
+| cardsense-api | ✅ 核心完成 | 情境推薦、疊加優惠計算、損益平衡、權益方案切換、子類別 / 範圍 / 條件過濾、匯率估值引擎、Supabase 讀取 |
+| cardsense-web | ✅ MVP Live + 進行中 | 推薦頁、卡片目錄、卡片詳情、`/calc` 社群入口頁、我的卡包 v1、內嵌匯率工具、FilterChip 設計系統、RWD + a11y 最佳化 |
 | 資料庫遷移 | ✅ 完成 | Extractor → SQLite → Supabase sync（psycopg2）；API prod 從 Supabase 讀取 |
 | 銀行擴充 | ✅ Phase 1 完成 | 5 家銀行全部上線（E.SUN / Cathay / Taishin / Fubon / CTBC） |
 | 權益切換 | ✅ 核心完成 | Extractor plan inference + API DecisionEngine 自動選擇最佳 plan；支援 CATHAY CUBE（7 plans）、TAISHIN RICHART |
@@ -65,7 +65,7 @@ CardSense 是一個以**情境式卡片比較**為核心的信用卡推薦平台
 ### Phase 2：前端開發 ✅
 
 - 推薦頁 `/recommend`、卡片目錄 `/cards`、卡片詳情 `/cards/:cardCode` 全部上線
-- `/calc` 年度損失社群入口頁已完成（AmountInput、CategoryGrid、CardSelector、ResultPanel、ShareButton）
+- `/calc` 年度損失社群入口頁已完成（AmountInput、CategoryGrid、CardSelector、ResultPanel、ShareButton），並已加入我的卡包 v1 與內嵌匯率工具；`agent/calc-wallet-rate-ui` 待開 PR 進一步修正桌機結果區擠壓、我的卡包輪播與精簡匯率面板
 - React 19 + TypeScript + Vite + Tailwind CSS + Radix UI + TanStack Query
 - Vercel 部署，深色模式支援
 
@@ -102,22 +102,22 @@ CardSense 是一個以**情境式卡片比較**為核心的信用卡推薦平台
 
 ### 🔥 當前優先：既有 5 家銀行資料品質提升
 
-100 張卡 763 筆優惠（506 RECOMMENDABLE / 148 CATALOG_ONLY / 109 FUTURE_SCOPE）。82 張卡有 RECOMMENDABLE 優惠。
+100 張卡 813 筆優惠（628 RECOMMENDABLE / 73 CATALOG_ONLY / 112 FUTURE_SCOPE）。
 
-- **P0：泛用回饋卡補全** ✅ 完成 — RECOMMENDABLE 從 387→506（+119），decomposed scope fix、Richart plan fix、feature extractor expansion fix、HERBALIFE 分類修正
-- **P1：CATALOG_ONLY 降級審查** 🟡 ~50% — 基礎建設 + P0 連帶效果，CATALOG_ONLY 從 195→148，16 張純 CATALOG_ONLY 卡待審查
+- **P0：泛用回饋卡補全** ✅ 完成 — decomposed scope fix、Richart plan fix、feature extractor expansion fix、HERBALIFE 分類修正已完成；後續資料擴充讓 RECOMMENDABLE 提升到 628
+- **P1：CATALOG_ONLY 降級審查** 🟡 深入中 — 基礎建設 + P0 連帶效果已讓 CATALOG_ONLY 從 195 降到 73，剩餘以 CTBC / E.SUN / Taishin / Cathay / Fubon 的特殊案例為主
 - **P2：聯名卡通用優惠補全** ⏳ 未開始 — 聯名卡除專屬通路外通常也享有銀行通用活動，目前未擷取
-- **P3：前端體驗配合** 🟡 ~80% — promo counts、catalog hints、filter 優化已上線
+- **P3：前端體驗配合** 🟡 ~80% — promo counts、catalog hints、filter 優化已上線；`/calc` 最新待開 PR 聚焦 My Wallet carousel、結果區版面與 compact exchange-rate board
 
-**➡️ 接續重點**：P1 核心審查 → Fubon targeted re-extraction → P2 bank-wide promotion → MILES API 支援
+**➡️ 接續重點**：瀏覽器手動驗證 `/calc` 新版工作流 → 更細的匯率估值說明 → Fubon 指定卡重抓 → P2 銀行通用優惠補全
 
 ### 後續待辦狀態調整
 
 | 項目 | 狀態/優先級 | 說明 |
 |------|-------------|------|
-| **`MILES` / `POINTS` 深度計算** | 🔥 P0 (進行中) | RewardCalculator 新增哩程回饋與高階點數折算 |
-| **即時匯率引擎 (Exchange Rate)** | 🔥 P0 (即將開始) | 回饋單位台幣估值牌告 + 玩家自訂匯率覆寫，排名動態洗牌 |
-| **我的卡包 (My Wallet Mode)** | 🔥 P0 (即將開始) | 從全網比價轉向「持卡最佳化與新卡利差計算」 |
+| **`MILES` / `POINTS` 深度計算** | 🔥 P0 (基礎完成，持續深化) | RewardCalculator / ExchangeRateService 已支援哩程、點數折算與 `rewardDetail`，下一步補更細估值說明 |
+| **即時匯率引擎 (Exchange Rate)** | 🔥 P0 (基礎完成) | `/v1/exchange-rates`、`customExchangeRates`、`rewardDetail`、推薦頁側邊抽屜與 `/calc` 內嵌工具面板已上線；待開 PR 將 `/calc` 匯率板壓縮為精簡面板 |
+| **我的卡包 (My Wallet Mode)** | ✅ P0（v1 已完成） | `/calc` 已支援本機保存/還原已選卡片、啟用權益方案、執行期欄位與自訂匯率；待開 PR 升級為已選卡片輪播 |
 | **Feedback Widget (Discord)** | 🟡 P1 (準備中) | 用戶報錯前端整合，低成本防堵 Extractor 漏洞 |
 | 日期 condition API 過濾 | 🟡 P1 | DecisionEngine 支援 DAY_OF_MONTH / DAY_OF_WEEK 過濾 |
 | `stackability` 顯式欄位 | 🟢 P2 | 拆出 SQLite 欄位，取代 `raw_payload_enums` 還原 |
