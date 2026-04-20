@@ -52,7 +52,7 @@ CardSense 是一個以**情境式卡片比較**為核心的信用卡推薦平台
 | cardsense-contracts | ✅ 完成 | Promotion / Recommendation / Stackability schema 穩定，9 大消費類別（新增 TRAVEL 旅遊）、merchant registry（190+ 筆，含 35+ 飯店/餐廳品牌）、subcategory→category 自動重映射、taxonomy 整合完成；Recommendation contracts 已支援 `MILES`、`customExchangeRates`、`rewardDetail` |
 | cardsense-extractor | ✅ 核心完成 | E.SUN + Cathay + TAISHIN + FUBON + CTBC real extractor、subcategory inference、subcategory→category remap、JSONL + SQLite 匯入、refresh_and_deploy |
 | cardsense-api | ✅ 核心完成 + 已部署 | 情境推薦、疊加優惠計算、break-even、subcategory 場景過濾、scope/eligibilityType/通路 condition 匹配；VENUE 跨類別匹配（hotel brand 同時命中 DINING + TRAVEL）；Exchange Rate Engine（`MILES` / `POINTS` 折算、`rewardDetail`、`/v1/exchange-rates`）已上線；Render 上線 |
-| cardsense-web | ✅ MVP 完成 + 已部署 | 首頁即算卡計算機（原 `/calc` 已升為 `/` 首頁）+ 卡片目錄 + SubcategoryGrid 場景選擇 + merchantName 輸入/提示 + My Wallet + inline 匯率工具 + 深色模式 + RWD + fintech UI；原生 feedback widget 可用 |
+| cardsense-web | ✅ MVP 完成 + 已部署 | 首頁即算卡計算機（原 `/calc` 已升為 `/` 首頁）+ 卡片目錄 + SubcategoryGrid 場景選擇 + merchantName 輸入/提示 + My Wallet + inline 匯率工具 + 深色模式 + RWD + fintech UI；原生 feedback widget + Supabase → Discord 即時通知（含截圖）已上線 |
 | 資料庫遷移 | ✅ 完成 | SQLite → Supabase sync 已上線；API prod 從 Supabase 讀取 |
 | 銀行擴充 | ✅ Phase 1 完成 | 5 家銀行上線（E.SUN / Cathay / Taishin / Fubon / CTBC），801 筆優惠 |
 | 資料品質 | ✅ P1 完成 | general reward expansion、分類器精確化、Unicard 百大展開、飯店 VENUE 標注、TRAVEL 類別新增、跨類別 VENUE 匹配；9 大消費類別穩定 |
@@ -125,7 +125,7 @@ CardSense 是一個以**情境式卡片比較**為核心的信用卡推薦平台
 - 回饋明細換算顯示（`rawReward × exchangeRate → ntdEquivalent`）
 - 卡片目錄頁（多維篩選：銀行、資格類型、優惠類別、年費區間、推薦範圍；可收合進階篩選；銀行品牌色 + 精選標記 + 空狀態優化）
 - 卡片詳情頁（基本資料 + 優惠資訊依類別分組顯示 + 權益切換提醒 + 一鍵跳轉推薦）
-- 原生 feedback widget（站內回饋表單 + 自動附帶頁面 context + 截圖上傳）
+- 原生 feedback widget（站內回饋表單 + 自動附帶頁面 context + 截圖上傳 → Supabase Storage → Discord embed 即時通知）
 - 權益切換卡支援（可折疊切換卡狀態控制、merchant picker、benefit tier badges、官方方案名稱對齊）
 - 動態 taxonomy（SUBCATEGORIES、MERCHANT_SUGGESTIONS 從 contracts JSON 自動衍生，`@contracts` Vite alias + `src/lib/taxonomy.ts`，Vercel build 時 shallow-clone contracts repo）
 - 深色模式（跟隨系統偏好，可手動切換）
@@ -507,7 +507,7 @@ SQLite → Supabase sync 上線，API prod 從 Supabase 讀取。
 
 1. **高階點數 / 哩程估值深化 (`MILES` / `POINTS`)**：`MILES` API、基礎估值與 `rewardDetail` 已落地；目前已補上 profile-aware 哩程估值解析，會依 `cardCode` / `cardName` / `title` / `conditions` 命中如 `ASIA_MILES`、`EVA_INFINITY`、`JALPAK` 等 program row，也已涵蓋 `Cathay Pacific` / `Japan Airlines` 這類 alias 訊號，下一步再擴更多航空計畫與轉點情境。
 2. **即時匯率引擎 (Exchange Rate Engine)**：核心能力已上線（`/v1/exchange-rates`、`customExchangeRates`、`rewardDetail`、前端覆寫面板），目前已形成雙入口：`/recommend` 推薦頁為 trigger button + right-side drawer 的 dense 匯率牌告板，首頁計算機則為設定區內的 inline 工具面板，並已在桌機版與 My Wallet / Card Selector 並列成更短的雙欄工作流；分享圖也已帶入本次估值來源摘要，推薦結果已補上換算式、估值來源與 note，牌告板 row 也已補上來源類型與 context，下一步聚焦更細的估值 explainability。
-3. **Feedback Widget (Discord / Notion downstream)**：原生前端回報表單已可用，後續再串接 Discord webhook / Notion Database，形成完整資料修正迴圈。
+3. **Feedback Widget (Discord downstream)**：✅ 已完成。原生前端回報表單 + Supabase Storage 截圖上傳 + Edge Function `notify-discord` → Discord embed 即時通知（含類型、描述、頁面 URL、截圖），形成完整資料修正迴圈。見 `fleet-command/docs/Supabase-Discord-Webhook-Setup.md`。
 4. **我的卡包 (My Wallet Mode)**：首頁計算機已完成本機 `localStorage` 卡包保存/還原、benefit-plan runtime 狀態保存、custom exchange rate 保存、restore-aware auto-select guard，以及 save / clear 控制面板；目前剩瀏覽器手動驗證與後續更進一步的回訪體驗優化。
 5. **首頁社群工具生成極致化**：已把設定區重排成桌機雙欄，讓情境輸入與 My Wallet / Card Selector / 匯率工具同屏可見；下一步完善 Canvas 分享圖，針對保費、日韓高消等極端情境做深，成為論壇算卡首選截圖來源。
 6. **Checkout Widget (B2B2C API)**（長期潛力）：未來可能成為 CardSense 直接嵌入外部網站的銷售工具。
@@ -521,7 +521,7 @@ SQLite → Supabase sync 上線，API prod 從 Supabase 讀取。
 | **高階點數 / 哩程估值深化 (`MILES` / `POINTS`)** | 🔥 P0 (基礎完成，持續細化) | API / contracts / web 已打通，推薦頁已落地 drawer 版匯率牌告板；`RewardCalculator` / `ExchangeRateService` 已能依 promotion metadata 與 airline alias 命中 miles profile row，下一步補更多航空計畫 / 轉點情境與 explainability |
 | **即時匯率引擎 (Exchange Rate)** | 🔥 P0 (基礎完成) | `/v1/exchange-rates`、`customExchangeRates`、`rewardDetail`、`/recommend` drawer/board、首頁 inline 工具面板、分享圖估值來源摘要與推薦結果換算式/來源 note 已上線；首頁桌機版已把匯率工具放進 My Wallet / Card Selector 附近的雙欄設定工作流；下一步補更細估值說明 |
 | **我的卡包 (My Wallet)** | ✅ P0（v1 已完成） | 首頁計算機已支援保存/還原 selected cards、active plans、runtime fields、custom exchange rates；尚待瀏覽器手動驗證與後續體驗深化 |
-| **Feedback Widget** | 🟡 P1 (原生版可用，待串接) | 站內回饋表單已可用，後續串接 Notion / Discord downstream |
+| **Feedback Widget** | ✅ 完成 | 原生表單 + Supabase Storage 截圖 + Edge Function → Discord embed 即時通知已上線（2026-04-20） |
 | 日期 condition API 過濾 | 🟡 P1 | DecisionEngine 支援 DAY_OF_MONTH / DAY_OF_WEEK 過濾 |
 | `stackability` 顯式欄位 | 🟢 P2 | 拆出 SQLite 欄位，取代 `raw_payload_enums` 還原 |
 | 擴充 COBRANDED_RETAILER_SIGNALS | 🟢 P2 | 持續擴充實體聯名通路，不盲目追求冷門邊緣卡 |
@@ -605,7 +605,7 @@ npm run dev                                       # http://localhost:5173
 - [CardSense Spec](./specs/spec-cardSense.md) — 完整專案規格說明書
 - [API Implementation Checklist](https://github.com/WaddleStudio/cardsense-api/blob/master/IMPLEMENTATION_CHECKLIST.md) — API 待辦與遷移時機
 
-*Last updated: 2026-04-17 — 原 `/calc` 已升為 `/` 首頁（CalcPage = index route），推薦表單移至 `/recommend`。My Wallet 輪播、compact exchange-rate board 已上線，後續聚焦瀏覽器驗證、分享圖與更細 explainability。*
+*Last updated: 2026-04-20 — Feedback Widget 完整串接上線：Supabase Storage 截圖 + Edge Function `notify-discord` → Discord embed 即時通知（含截圖）。設定說明見 `fleet-command/docs/Supabase-Discord-Webhook-Setup.md`。*
 
 ## 備註
 
