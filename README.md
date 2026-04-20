@@ -50,6 +50,14 @@ ext:      .md / .txt
 
 ---
 
+## 個人工具（已部署，非商業）
+
+| 工具 | 定位 | 技術棧 | 狀態 |
+|------|------|--------|------|
+| **RentRadar** | 591 租屋新物件監控，LINE + Discord 即時推播 | Python 3.12 / uv / Playwright / Supabase / LINE Messaging API / Discord Webhook / Oracle Cloud | ✅ 運行中 |
+
+---
+
 ## 跨專案整合（高價值路徑）
 
 ```
@@ -82,6 +90,7 @@ SEEDCRAFT → RTA             補習班推薦 → 評論可信度
 | [godine](https://github.com/WaddleStudio/godine) | AI 餐廳推薦（SmartChoice 縮小版） | spec-smartChoice | |
 | [fridgemanager](https://github.com/WaddleStudio/fridgemanager) | 食材管理 | spec-fridgemanager | |
 | [knoty](https://github.com/WaddleStudio/knoty) | 人際關係圖譜 | spec-knoty | |
+| [rent-radar](https://github.com/WaddleStudio/rent-radar) | 591 租屋監控 Bot | spec-rent-radar | ✅ 運行中 |
 
 更新流程：**改 spec → commit to fleet-command → 對應 code repo 跟進實作**。
 
@@ -96,4 +105,4 @@ SEEDCRAFT → RTA             補習班推薦 → 評論可信度
 
 ---
 
-*Maintained by [Waddle Studio](https://github.com/WaddleStudio) | Last updated: 2026-04-01*
+*Maintained by [Waddle Studio](https://github.com/WaddleStudio) | Last updated: 2026-04-20*
