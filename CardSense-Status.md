@@ -141,9 +141,10 @@ CardSense 是一個以**情境式卡片比較**為核心的信用卡推薦平台
 
 ### cardsense-api
 
-**Latest**: `8207abc` — integrate exchange rate engine and update recommendation DTOs
+**Latest**: `608bba9` — filter by DAY_OF_MONTH and DAY_OF_WEEK date conditions in DecisionEngine
 
 **近期功能迭代**：
+- `608bba9` feat(api): filter by DAY_OF_MONTH / DAY_OF_WEEK date conditions; pin lombok 1.18.36
 - `8207abc` feat(api): integrate exchange rate engine and update recommendation DTOs
 - `eb1fae4` feat: RewardCalculator MILES/POINTS valuation + Exchange Rate Engine checklist
 - `a889503` feat: support MILES points in RewardCalculator
@@ -349,7 +350,7 @@ taxonomy/      → category / channel / frequency / subcategory / merchant-regis
 - `STACK_ALL_ELIGIBLE` 仍為 heuristic aggregation，待 `stackability` 標註完整後升級為 deterministic stacking
 
 **Extractor**：
-- `DAY_OF_MONTH` / `DAY_OF_WEEK` condition 目前僅標記，API 端尚未依日期過濾推薦結果
+- ~~`DAY_OF_MONTH` / `DAY_OF_WEEK` condition 目前僅標記，API 端尚未依日期過濾推薦結果~~ → ✅ 已修復（`608bba9`）
 - `COBRANDED_RETAILER_SIGNALS` 已擴充至 26+ 獨立場所（含 14 飯店集團 + 12 獨立飯店/餐廳），可持續擴充寶雅、燦坤等聯名卡通路
 - 銀行頁面結構可能改版，heuristic 需持續調整
 - 部分活動屬於身份型、首刷型或分期型，只適合歸類為 `CATALOG_ONLY` 或 `FUTURE_SCOPE`
@@ -508,11 +509,15 @@ SQLite → Supabase sync 上線，API prod 從 Supabase 讀取。
 1. **高階點數 / 哩程估值深化 (`MILES` / `POINTS`)**：`MILES` API、基礎估值與 `rewardDetail` 已落地；目前已補上 profile-aware 哩程估值解析，會依 `cardCode` / `cardName` / `title` / `conditions` 命中如 `ASIA_MILES`、`EVA_INFINITY`、`JALPAK` 等 program row，也已涵蓋 `Cathay Pacific` / `Japan Airlines` 這類 alias 訊號，下一步再擴更多航空計畫與轉點情境。
 2. **即時匯率引擎 (Exchange Rate Engine)**：核心能力已上線（`/v1/exchange-rates`、`customExchangeRates`、`rewardDetail`、前端覆寫面板），目前已形成雙入口：`/recommend` 推薦頁為 trigger button + right-side drawer 的 dense 匯率牌告板，首頁計算機則為設定區內的 inline 工具面板，並已在桌機版與 My Wallet / Card Selector 並列成更短的雙欄工作流；分享圖也已帶入本次估值來源摘要，推薦結果已補上換算式、估值來源與 note，牌告板 row 也已補上來源類型與 context，下一步聚焦更細的估值 explainability。
 3. **Feedback Widget (Discord downstream)**：✅ 已完成。原生前端回報表單 + Supabase Storage 截圖上傳 + Edge Function `notify-discord` → Discord embed 即時通知（含類型、描述、頁面 URL、截圖），形成完整資料修正迴圈。見 `fleet-command/docs/Supabase-Discord-Webhook-Setup.md`。
-4. **我的卡包 (My Wallet Mode)**：首頁計算機已完成本機 `localStorage` 卡包保存/還原、benefit-plan runtime 狀態保存、custom exchange rate 保存、restore-aware auto-select guard，以及 save / clear 控制面板；目前剩瀏覽器手動驗證與後續更進一步的回訪體驗優化。
+4. **我的卡包 (My Wallet Mode)**：✅ v1 驗收完成（2026-04-20）。localStorage 保存/還原、benefit-plan runtime、custom exchange rate、restore-aware auto-select guard、save/clear 控制面板全數通過瀏覽器手動驗收。UI 同步強化：unsaved changes 改為 amber 警示框 + AlertTriangle 圖示；summaryLine 加入 active plan 計數；Save 按鈕下方補 "Saves cards, benefit plans, and exchange rate settings" hint。決策：不加 navigation blocker，amber warning 已是合理 friction level。
 5. **首頁社群工具生成極致化**：已把設定區重排成桌機雙欄，讓情境輸入與 My Wallet / Card Selector / 匯率工具同屏可見；下一步完善 Canvas 分享圖，針對保費、日韓高消等極端情境做深，成為論壇算卡首選截圖來源。
 6. **Checkout Widget (B2B2C API)**（長期潛力）：未來可能成為 CardSense 直接嵌入外部網站的銷售工具。
 
 2026-04-12 UI follow-up: PR #3 merged — calculator-first layout, My Wallet carousel, compact exchange-rate board。原 `/calc` 已升為 `/` 首頁，推薦表單移至 `/recommend`。
+
+2026-04-20 My Wallet v1 驗收完成：amber unsaved-changes 警示框、summaryLine plan 計數、Save 按鈕 hint 上線（`ec6b135`）。
+
+2026-04-20 API P1 完成：DecisionEngine 日期 condition 過濾上線（DAY_OF_MONTH / DAY_OF_WEEK / WEEKEND）；lombok pin 1.18.36 解除 JFrog Xray 封鎖（`608bba9`）。
 
 ### 後續待辦狀態調整
 
@@ -520,9 +525,9 @@ SQLite → Supabase sync 上線，API prod 從 Supabase 讀取。
 |------|-------------|------|
 | **高階點數 / 哩程估值深化 (`MILES` / `POINTS`)** | 🔥 P0 (基礎完成，持續細化) | API / contracts / web 已打通，推薦頁已落地 drawer 版匯率牌告板；`RewardCalculator` / `ExchangeRateService` 已能依 promotion metadata 與 airline alias 命中 miles profile row，下一步補更多航空計畫 / 轉點情境與 explainability |
 | **即時匯率引擎 (Exchange Rate)** | 🔥 P0 (基礎完成) | `/v1/exchange-rates`、`customExchangeRates`、`rewardDetail`、`/recommend` drawer/board、首頁 inline 工具面板、分享圖估值來源摘要與推薦結果換算式/來源 note 已上線；首頁桌機版已把匯率工具放進 My Wallet / Card Selector 附近的雙欄設定工作流；下一步補更細估值說明 |
-| **我的卡包 (My Wallet)** | ✅ P0（v1 已完成） | 首頁計算機已支援保存/還原 selected cards、active plans、runtime fields、custom exchange rates；尚待瀏覽器手動驗證與後續體驗深化 |
+| **我的卡包 (My Wallet)** | ✅ 完成 | v1 驗收完成（2026-04-20）；amber unsaved-changes 警示、summaryLine plan 計數、Save hint 已上線 |
 | **Feedback Widget** | ✅ 完成 | 原生表單 + Supabase Storage 截圖 + Edge Function → Discord embed 即時通知已上線（2026-04-20） |
-| 日期 condition API 過濾 | 🟡 P1 | DecisionEngine 支援 DAY_OF_MONTH / DAY_OF_WEEK 過濾 |
+| 日期 condition API 過濾 | ✅ 完成 | `matchesDateConditions` 實作；DAY_OF_MONTH / DAY_OF_WEEK / WEEKEND 全部支援；7 tests（`608bba9`，2026-04-20） |
 | `stackability` 顯式欄位 | 🟢 P2 | 拆出 SQLite 欄位，取代 `raw_payload_enums` 還原 |
 | 擴充 COBRANDED_RETAILER_SIGNALS | 🟢 P2 | 持續擴充實體聯名通路，不盲目追求冷門邊緣卡 |
 | Fubon targeted re-extraction | 🟢 P2 | 補回 INSURANCE/INFINITE/DIGITALLIFE 3 張卡 |
