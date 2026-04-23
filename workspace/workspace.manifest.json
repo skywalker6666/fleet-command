@@ -1,0 +1,155 @@
+{
+  "version": 1,
+  "workspace": {
+    "name": "cardsense-workspace",
+    "sourceOfTruthRepo": "fleet-command",
+    "rootRgignorePath": ".rgignore",
+    "notes": [
+      "Read generated repo context before scanning long status documents.",
+      "Use fleet-command as the control plane for cross-repo workflow and conventions."
+    ]
+  },
+  "policies": [
+    {
+      "id": "python-package-management",
+      "title": "Python package management",
+      "rule": "Use uv for Python dependency management and Python command execution across the workspace."
+    }
+  ],
+  "branchTypes": [
+    {
+      "id": "feat",
+      "description": "New feature or user-visible capability increase."
+    },
+    {
+      "id": "fix",
+      "description": "Bug fix or regression repair."
+    },
+    {
+      "id": "chore",
+      "description": "Docs, config, generated files, workflow, maintenance, or non-behavior refactor."
+    },
+    {
+      "id": "wip",
+      "description": "Exploratory or intentionally incomplete work that should stay isolated."
+    }
+  ],
+  "completionFlow": {
+    "sourceDoc": "fleet-command/AGENTS.md",
+    "summary": [
+      "Run verification first.",
+      "Update fleet-command when workflow, architecture, or workspace rules changed.",
+      "Re-render workspace assets when the manifest or generated context changed.",
+      "Organize branches by repo + branch type + shared slug.",
+      "Batch commit by repo.",
+      "Batch push by repo."
+    ]
+  },
+  "ignore": {
+    "patterns": [
+      "**/.git/",
+      "**/.worktrees/",
+      "**/node_modules/",
+      "**/dist/",
+      "**/.superpowers/brainstorm/",
+      "**/.claude/skills/gstack/",
+      "**/.uv-cache/",
+      "**/.vite-*.log",
+      "**/outputs/*.jsonl",
+      "**/.github/java-upgrade/"
+    ]
+  },
+  "repos": [
+    {
+      "name": "fleet-command",
+      "path": "fleet-command",
+      "purpose": "Workspace control plane, specs, agent rules, and shared skills",
+      "role": "control-plane",
+      "generatedContextPath": "WORKSPACE_CONTEXT.generated.md",
+      "keyFiles": [
+        "README.md",
+        "AGENTS.md",
+        "CardSense-Overview.md",
+        "CardSense-Status.md"
+      ],
+      "commands": {
+        "verify": [
+          "python scripts/render_workspace_assets.py --check"
+        ]
+      }
+    },
+    {
+      "name": "cardsense-contracts",
+      "path": "cardsense-contracts",
+      "purpose": "Shared contracts, schemas, and taxonomies for CardSense repos",
+      "role": "contracts",
+      "generatedContextPath": "WORKSPACE_CONTEXT.generated.md",
+      "keyFiles": [
+        "README.md",
+        "VIBE_SPEC.md",
+        "promotion/promotion-normalized.schema.json",
+        "recommendation/recommendation-request.schema.json",
+        "recommendation/recommendation-response.schema.json"
+      ],
+      "commands": {
+        "verify": [
+          "rg -n \"TRAVEL\" promotion recommendation taxonomy"
+        ]
+      }
+    },
+    {
+      "name": "cardsense-extractor",
+      "path": "cardsense-extractor",
+      "purpose": "Promotion extraction, normalization, import, and sync pipeline",
+      "role": "data-pipeline",
+      "generatedContextPath": "WORKSPACE_CONTEXT.generated.md",
+      "keyFiles": [
+        "README.md",
+        "VIBE_SPEC.md",
+        "skills/cardsense-bank-promo-review/SKILL.md",
+        "extractor/promotion_rules.py",
+        "jobs/refresh_and_deploy.py"
+      ],
+      "commands": {
+        "verify": [
+          "uv run pytest",
+          "uv run python jobs/refresh_and_deploy.py --help"
+        ]
+      }
+    },
+    {
+      "name": "cardsense-api",
+      "path": "cardsense-api",
+      "purpose": "Deterministic recommendation API runtime and repository adapters",
+      "role": "runtime",
+      "generatedContextPath": "WORKSPACE_CONTEXT.generated.md",
+      "keyFiles": [
+        "README.md",
+        "VIBE_SPEC.md",
+        "src/main/java/com/cardsense/api/service/DecisionEngine.java"
+      ],
+      "commands": {
+        "verify": [
+          "mvn test"
+        ]
+      }
+    },
+    {
+      "name": "cardsense-web",
+      "path": "cardsense-web",
+      "purpose": "Frontend recommendation UX and calc surface",
+      "role": "frontend",
+      "generatedContextPath": "WORKSPACE_CONTEXT.generated.md",
+      "keyFiles": [
+        "README.md",
+        "src/lib/taxonomy.ts",
+        "src/types/enums.ts"
+      ],
+      "commands": {
+        "verify": [
+          "npm run build"
+        ]
+      }
+    }
+  ]
+}

@@ -83,6 +83,49 @@
 
 ---
 
+## Branch 類型字典
+
+- `feat`: 新功能或可見能力增加
+- `fix`: bug 修正或回歸修正
+- `chore`: 文件、設定、生成檔、流程、維護，或不改行為的重構
+- `wip`: 探索中、尚未可合併、需要保留中間態
+
+Branch 命名格式：
+
+```text
+{type}/{slug}
+```
+
+規則：
+
+- branch type 必須依工作內容選擇，不要一律使用同一種前綴
+- 若同一批工作跨多個 repo，所有 repo 使用相同的 `slug`
+- 同一批工作可在不同 repo 使用不同 type，但預設應盡量收斂成同一 type
+- 若工作內容已明確可歸類，不要使用 `wip`
+
+### 完成開發後流程
+
+每次完成一輪開發後，agent 應依序執行：
+
+```text
+1. 跑對應驗證
+2. 判斷是否需要更新 fleet-command
+3. 若 workspace.manifest.json、WORKSPACE_CONTEXT.generated.md、.rgignore 相關內容變更，執行 renderer
+4. 檢查各 repo git status
+5. 按 repo + branch type + shared slug 整理 branch
+6. 依 repo 分開 batch commit
+7. 依 repo 分開 batch push
+```
+
+補充規則：
+
+- Python 相關套件管理與命令執行一律使用 `uv`
+- 若變更影響 workflow、架構、agent 規範、workspace 規則、shared skill、source-of-truth 文件，優先更新 `fleet-command`
+- renderer 指的是：
+  - `python fleet-command/scripts/render_workspace_assets.py`
+- batch commit 的單位是「每個 repo 各自提交」，不要把多個 repo 的變更混成同一個 commit
+- batch push 的單位也是「每個 repo 各自 push 到對應 branch」
+
 ## 日誌規範
 
 每次 agent 操作結束後，寫入 `agent-log/YYYY-MM-DD.md`：
