@@ -101,12 +101,14 @@ CardSense 的核心傳播路徑：用戶算卡 → 覺得結果值得截圖 → 
 #### 1. 商家搜尋入口前置（Web）
 **問題**：merchantName 輸入目前藏在進階選項，用戶的第一個問題「我去全聯刷哪張？」沒有明顯入口。  
 **目標**：商家名稱成為首頁主要輸入路徑之一，直接觸發推薦。
-**進度（2026-04-24）**：已完成第一階段。首頁計算機 `/` 與 `/recommend` 均已加入 merchant-first 輸入區、熱門商家捷徑與預設場景；下一階段改為用實際推薦結果校準 shortcut 名單與排序。
+**進度（2026-04-26）**：已完成第二階段基礎校準。首頁計算機 `/` 與 `/recommend` 會在沒有場景專屬商家建議時顯示 registry 派生的熱門 shortlist（全聯、家樂福、momo、蝦皮、Agoda、星巴克、Uber Eats、麥當勞），並以單元測試鎖住排序與 registry 對齊。
 
 #### 2. 高頻商家覆蓋補強（Extractor + Contracts）
 **問題**：精準計算的前提是資料完整。若商家映射缺失，算出來的數字是殘缺答案。  
 **目標**：確保台灣前 200 高頻商家（全聯、家樂福、momo、蝦皮、麥當勞、星巴克、POYA、Agoda 等）在 5 家銀行中的 VENUE condition 正確標注，讓同一商家能同時比到多張卡。  
 **衡量**：輸入「全聯」→ 至少有 3 張以上不同銀行的卡回傳結果。
+**進度（2026-04-26）**：補上 API 高頻商家 alias canonicalization，讓「全聯」可命中 `PXMART` / `PX Mart` / 「大全聯」等 VENUE 標記；新增跨 CATHAY、ESUN、TAISHIN 三銀行的 DecisionEngine 測試。Contracts 新增 `POYA`，Extractor 的 DRUGSTORE inference 也會產生 `VENUE=POYA`。
+**Supabase audit（2026-04-26）**：production `promotion_current` active + `RECOMMENDABLE` 共 587 筆。`Agoda` 已達 4 家銀行 / 6 張卡 / 9 promotions；初查 `全聯/PXMART` 只有 CATHAY + TAISHIN 兩家銀行 / 2 張卡 / 2 promotions，ESUN Unicard 超市量販三筆已是 `RECOMMENDABLE` 但缺 `PXMART` VENUE。已修正 extractor 的 ESUN Unicard 百大指定消費生活採買/超市量販 variant，並 scoped patch production Supabase 三筆 ESUN_UNICARD supermarket rows 補上 `VENUE=PXMART`。目前 `全聯/PXMART` 已達 CATHAY + ESUN + TAISHIN 三家銀行 / 3 張卡 / 5 promotions。FUBON / CTBC production 目前沒有全聯文字或全聯 VENUE，只有一般消費 rows，暫不升級以免把 general reward 誤標成指定商家優惠。
 
 #### 3. 卡片基本資料可信度（Extractor + API）
 **問題**：用戶算完會去確認年費、條件等基本資料；若有誤，整個推薦結果的信任度崩塌。  
