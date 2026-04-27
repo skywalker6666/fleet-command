@@ -109,6 +109,7 @@ CardSense 的核心傳播路徑：用戶算卡 → 覺得結果值得截圖 → 
 **衡量**：輸入「全聯」→ 至少有 3 張以上不同銀行的卡回傳結果。
 **進度（2026-04-26）**：補上 API 高頻商家 alias canonicalization，讓「全聯」可命中 `PXMART` / `PX Mart` / 「大全聯」等 VENUE 標記；新增跨 CATHAY、ESUN、TAISHIN 三銀行的 DecisionEngine 測試。Contracts 新增 `POYA`，Extractor 的 DRUGSTORE inference 也會產生 `VENUE=POYA`。
 **Supabase audit（2026-04-26）**：production `promotion_current` active + `RECOMMENDABLE` 共 587 筆。`Agoda` 已達 4 家銀行 / 6 張卡 / 9 promotions；初查 `全聯/PXMART` 只有 CATHAY + TAISHIN 兩家銀行 / 2 張卡 / 2 promotions，ESUN Unicard 超市量販三筆已是 `RECOMMENDABLE` 但缺 `PXMART` VENUE。已修正 extractor 的 ESUN Unicard 百大指定消費生活採買/超市量販 variant，並 scoped patch production Supabase 三筆 ESUN_UNICARD supermarket rows 補上 `VENUE=PXMART`。目前 `全聯/PXMART` 已達 CATHAY + ESUN + TAISHIN 三家銀行 / 3 張卡 / 5 promotions。FUBON / CTBC production 目前沒有全聯文字或全聯 VENUE，只有一般消費 rows，暫不升級以免把 general reward 誤標成指定商家優惠。
+**補充（2026-04-27）**：納入國泰 CUBE「日本賞」官方活動頁（2026/03/01-2026/04/30）作為 CATHAY_CUBE_JAPAN 資料來源。Extractor 會展開日本實體消費、旅日交通、預訂行程、國內日系餐飲、國內日系購物 5 個 variant，並補齊 SUSHIRO、DON_DON_DONKI、UNITED_ARROWS、GU、GO_TAXI_JP、TAOYUAN_AIRPORT_MRT、MING_YAO 等 merchant registry / API alias。
 
 #### 3. 卡片基本資料可信度（Extractor + API）
 **問題**：用戶算完會去確認年費、條件等基本資料；若有誤，整個推薦結果的信任度崩塌。  
@@ -168,4 +169,4 @@ CardSense 的核心傳播路徑：用戶算卡 → 覺得結果值得截圖 → 
 - [fleet-command/specs/spec-cardSense.md](./specs/spec-cardSense.md) — 完整專案規格書
 - [fleet-command/docs/Supabase-Discord-Webhook-Setup.md](./docs/Supabase-Discord-Webhook-Setup.md) — Feedback Widget 串接說明
 
-*Last updated: 2026-04-24*
+*Last updated: 2026-04-27*
