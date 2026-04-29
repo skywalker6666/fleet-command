@@ -164,9 +164,10 @@ CardSense 的核心傳播路徑：用戶算卡 → 覺得結果值得截圖 → 
 
 ## 相關文件
 
+- [fleet-command/reviews/2026-04-29-cardsense-review/CardSense-Review-2026-04-29.md](./reviews/2026-04-29-cardsense-review/CardSense-Review-2026-04-29.md) — 2026-04-29 product / UX / QA / engineering / security 綜合 review
 - [cardsense-api/IMPLEMENTATION_CHECKLIST.md](../cardsense-api/IMPLEMENTATION_CHECKLIST.md) — API 待辦細項
 - [CardSense-Bank-Promo-Review-Workflow.md](./CardSense-Bank-Promo-Review-Workflow.md) — 優惠審查與 benefit-plan 流程
 - [fleet-command/specs/spec-cardSense.md](./specs/spec-cardSense.md) — 完整專案規格書
 - [fleet-command/docs/Supabase-Discord-Webhook-Setup.md](./docs/Supabase-Discord-Webhook-Setup.md) — Feedback Widget 串接說明
 
-*Last updated: 2026-04-27*
+*Last updated: 2026-04-29*
