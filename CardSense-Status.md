@@ -1,8 +1,14 @@
-# CardSense — 情境式信用卡推薦平台
+# CardSense — 台灣信用卡付款決策引擎
 
-CardSense 是一個以**情境式卡片比較**為核心的信用卡推薦平台。接收消費情境（金額、類別、通路、日期、支付方式），精確計算各張卡在該情境下的有效回饋（含疊加），回傳可解釋、可審計的推薦結果。
+CardSense 的產品方向已從「情境式卡片比較平台」收斂為 **台灣信用卡付款前 decision engine**：
 
-> **Live**: https://cardsense-web.vercel.app
+> 輸入我的卡、商家、支付方式、金額與今天的規則，直接回答「這筆該刷哪張、實拿多少、為什麼，以及哪些條件會讓結果翻車」。
+
+CardSense 不追求短期內複製 iCard.AI、Money101 或卡優新聞網的完整卡片/SEO 目錄。下一階段的核心是 **My Wallet + transaction decision + trust explanation**，先把高頻消費場景的「當下決策品質」做到可信、可解釋、可分享。
+
+> **Live**: https://cardsense-web.vercel.app  
+> **Last updated**: 2026-04-30  
+> **Current source of direction**: [CardSense Review 2026-04-29](./reviews/2026-04-29-cardsense-review/CardSense-Review-2026-04-29.md) + [Product Direction vs iCard.AI](./reviews/2026-04-29-cardsense-review/CardSense-Product-Direction-vs-iCardAI.md)
 
 ---
 
@@ -10,69 +16,88 @@ CardSense 是一個以**情境式卡片比較**為核心的信用卡推薦平台
 
 | 子專案 | 角色 | 技術棧 | 部署 | GitHub |
 |--------|------|--------|------|--------|
-| cardsense-contracts | 共用資料契約（JSON Schema、DTO、列舉、stackability、benefit plan） | JSON Schema | — | [WaddleStudio/cardsense-contracts](https://github.com/WaddleStudio/cardsense-contracts) |
-| cardsense-extractor | 銀行優惠資料擷取與正規化 | Python 3.13+ / uv / Pydantic / SQLite + Supabase sync | Local | [WaddleStudio/cardsense-extractor](https://github.com/WaddleStudio/cardsense-extractor) |
-| cardsense-api | 情境推薦 REST API | Java 21 / Spring Boot / SQLite / Supabase / Maven | Render | [WaddleStudio/cardsense-api](https://github.com/WaddleStudio/cardsense-api) |
-| cardsense-web | 前端展示 | React 19 / TypeScript 5.9 / Vite 8 / shadcn/ui / Tailwind CSS 4 | Vercel | [WaddleStudio/cardsense-web](https://github.com/WaddleStudio/cardsense-web) |
+| cardsense-contracts | 共用資料契約：JSON Schema、DTO、列舉、merchant registry、stackability、benefit plan | JSON Schema | — | [WaddleStudio/cardsense-contracts](https://github.com/WaddleStudio/cardsense-contracts) |
+| cardsense-extractor | 銀行優惠資料擷取、正規化、版本化、SQLite/Supabase 匯入 | Python 3.13+ / uv / Pydantic / SQLite + Supabase sync | Local/Ops | [WaddleStudio/cardsense-extractor](https://github.com/WaddleStudio/cardsense-extractor) |
+| cardsense-api | 確定性推薦 API 與 rule engine | Java 21 / Spring Boot / SQLite / Supabase / Maven | Render | [WaddleStudio/cardsense-api](https://github.com/WaddleStudio/cardsense-api) |
+| cardsense-web | 前端決策流程、My Wallet、推薦結果與分享體驗 | React 19 / TypeScript 5.9 / Vite 8 / shadcn/ui / Tailwind CSS 4 | Vercel | [WaddleStudio/cardsense-web](https://github.com/WaddleStudio/cardsense-web) |
 
 ---
 
 ## 架構總覽
 
-```
+```text
 銀行官網 ──→ Extractor ──→ JSONL ──→ SQLite ──→ Supabase ──→ API (Render) ──→ Frontend (Vercel)
               │                        │            │
               │  scrape / heuristic    │  local DB   │  PostgreSQL (prod)
-              │  normalize / version   │            │  確定性規則引擎
+              │  normalize / version   │            │  deterministic DecisionEngine
               ▼                        ▼            ▼
         cardsense-contracts      cardsense-contracts
-        (schema 驗證)            (DTO / response 契約)
+        (schema validation)      (DTO / response contracts)
 ```
 
 **核心設計原則**：
-- **用戶請求路徑零 LLM** — 確定性規則引擎，100% 可重現、可審計
-- **版本不可變** — `promoVersionId`，語義變更 = 新版本，SHA-256 hash 去重
-- **強制免責聲明** — 每筆 API 回應包含法律 disclaimer
-- **Repository 抽象** — mock / sqlite / supabase 三模式，切換無需改動業務邏輯
+
+- **用戶請求路徑零 LLM**：推薦結果由確定性規則引擎產生，必須可重現、可審計。
+- **有效回饋優先於 headline rate**：排序依 caps、thresholds、registration、eligibility、date、payment method 後的實拿價值。
+- **信任層是產品功能，不是備註**：每筆推薦都要能顯示 source、verified date、valid period、matched rules、excluded rules、assumptions、confidence。
+- **Privacy-light My Wallet**：初期只需要卡名與可選方案/上限使用量，不收卡號。
+- **商業排序與有機排序分離**：affiliate 或商業合作不得靜默影響推薦排名。
 
 **資料流**：
-1. Extractor 從銀行官網擷取原始優惠頁面（local 執行）
-2. scrape → parse_rules → normalize → validate → version 產生 JSONL
-3. `import_jsonl_to_db.py` 匯入 SQLite `promotion_current` table
-4. `refresh_and_deploy.py` 一鍵完成全銀行提取 → 匯入 → 同步至 Supabase
-5. API (Render) 在 prod 從 Supabase 讀取；local 可直接連 SQLite
-6. Frontend (Vercel) 呼叫 API 展示推薦結果
+
+1. Extractor 從銀行官網擷取優惠頁面。
+2. scrape → parse_rules → normalize → validate → version，產生 JSONL。
+3. `import_jsonl_to_db.py` 匯入 SQLite `promotion_current`。
+4. `refresh_and_deploy.py` 完成全銀行提取、匯入、同步至 Supabase。
+5. API 在 production 從 Supabase 讀取，local 可直接連 SQLite。
+6. Frontend 呼叫 API，將推薦結果轉成可理解、可檢查、可分享的付款決策。
 
 ---
 
-## 現況快照（2026-04-24）
+## 現況快照
 
-| 子專案 | 狀態 | Latest |
-|--------|------|--------|
-| cardsense-contracts | ✅ 穩定 | `28bbaf6` — README 補充 benefit-plan schema 與 recommendation response 結構 |
-| cardsense-extractor | ✅ 核心完成 | `1e09b02` — README 補充 Supabase sync 與 `refresh_and_deploy` 新參數 |
-| cardsense-api | ✅ 已部署 | `608bba9` — DAY_OF_MONTH / DAY_OF_WEEK 日期過濾 |
-| cardsense-web | ✅ 已部署 | `48dc3ce` — 首頁計算機商家捷徑前移與熱門商家 shortcut 調整 |
+### 已具備能力
 
-### 最近進展（2026-04-24）
+| 面向 | 現況 |
+|------|------|
+| 產品骨架 | merchant-first calculator、My Wallet、benefit plan switching、recommendation result、分享圖已有初版 |
+| Rule engine | Spring Boot deterministic `DecisionEngine`，已支援情境推薦與部分 stackability / benefit plan |
+| 資料 pipeline | contracts、extractor、SQLite、Supabase、API production path 已串起 |
+| 已支援銀行 | E.SUN、CATHAY、TAISHIN、FUBON、CTBC |
+| 高頻商家 | 已開始補強全聯、momo、Shopee、Agoda、Uber Eats、LINE Pay、Apple Pay、Costco、日本消費等場景 |
+| Review 證據 | 2026-04-29 已完成 product / UX / QA / engineering / security report-only review，含 production screenshots |
 
-- **Web / Roadmap #1**：已將 merchant-first 入口前移到實際首頁計算機 `/`，並同步補到 `/recommend`；加入熱門商家捷徑（全聯、家樂福、momo、蝦皮、Agoda、星巴克、Uber Eats）與預設場景映射。
-- **首次體驗**：使用者現在可以從「我去全聯刷哪張？」這類商家問題直接進站，不必先理解完整類別樹；切換類別 / 子類別時也不會再清空 merchantName。
-- **下一步**：用實際 API / SQLite 結果驗證熱門商家清單，收斂為「高辨識度 + 穩定可回傳 2 張以上卡片」的 shortlist。
-- **Pipeline verify 註記**：本輪為前端導向改動，依 `cardsense-pipeline-verify` workflow 暫不需執行 extractor / SQLite / API smoke test；下次若涉及商家映射、promotion import 或 benefit-plan 變更，需補跑完整驗證流程並記錄 pass/fail。
+### 主要風險
 
-**資料規模**：5 家銀行、100 張卡、813 筆優惠（628 RECOMMENDABLE）
+| 優先級 | 風險 | 影響 |
+|--------|------|------|
+| P0 | `/calc` route 斷裂，但 share URL 產生 `/calc` | 社群分享導流會進空白 SPA shell |
+| P0 | `channel=ALL` 未當 wildcard | 會排除原本應符合的優惠，例如 CUBE Japan rewards |
+| P0 | invalid enum / maxResults 回 200 + empty recommendations | 使用者與前端無法分辨輸入錯誤或真的沒有推薦 |
+| P0 | 推薦結果缺少可見 trust layer | 使用者不容易相信金錢決策 |
+| P0 | extractor local `.env` 曾含高權限 Supabase / Cloudflare secret | 需要 rotate 並改 least-privilege / secret manager |
+| P1 | `promotion_current` publish 非 atomic | production 可能讀到空資料或 partial data |
+| P1 | Java model 與 JSON Schema contract drift | 未來 client generation 與跨 repo 協作會壞 |
+| P1 | merchant registry 與 API hardcoded aliases 分裂 | 商家匹配品質會難以維護 |
+| P1 | mobile primary flow 過長 | checkout-time 決策場景被資訊密度淹沒 |
+| P1 | public recommendation POST 缺 rate limiting | 可用性、成本與 audit log 可能被濫用 |
 
-### 已支援銀行
+### 2026-04-30 修復 PR 狀態
 
-| 銀行 | Extractor | 擷取方式 |
-|------|-----------|----------|
-| ✅ E.SUN（玉山） | `esun_real.py` | HTML 頁面直接抓取 |
-| ✅ CATHAY（國泰） | `cathay_real.py` | Model JSON 抽取 |
-| ✅ TAISHIN（台新） | `taishin_real.py` | Cloudflare Browser Rendering + HTML |
-| ✅ FUBON（富邦） | `fubon_real.py` | Cloudflare Browser Rendering + HTML |
-| ✅ CTBC（中信） | `ctbc_real.py` | JSON API + Playwright |
-| ⏸️ MEGA / FIRST / SINOPAC / TPBANK / UBOT | — | 凍結，待既有 5 家品質穩定後排入 |
+本輪 P0/P1 修復已拆成四個 repo PR，狀態為 **PR opened / pending review + merge + deploy verification**。這些項目尚未等同於 production 完成；合併後仍需跑 production smoke、`/calc` 分享路徑、mobile checkout flow、trust panel 與 no-result state 的瀏覽器驗證。
+
+| Repo | PR | 覆蓋項目 | 驗證 |
+|------|----|----------|------|
+| cardsense-web | [#5](https://github.com/WaddleStudio/cardsense-web/pull/5) | `/calc` route、trust result panel、no-result UI、mobile progressive disclosure | `npm run build` pass；`npm run test:unit` pass，90 tests；local `/calc` 200 |
+| cardsense-api | [#3](https://github.com/WaddleStudio/cardsense-api/pull/3) | `channel=ALL` wildcard、invalid request 400、public recommendation POST protection、merchant registry matcher、trust metadata passthrough | `mvn clean -Dtest=DecisionEngineTest,DecisionEngineBenefitPlanTest test` pass，30 tests |
+| cardsense-extractor | [#3](https://github.com/WaddleStudio/cardsense-extractor/pull/3) | atomic `promotion_current` PostgreSQL publish、credential policy / rotation guidance | `uv run pytest tests/test_supabase_store.py` pass，21 tests |
+| cardsense-contracts | [#2](https://github.com/WaddleStudio/cardsense-contracts/pull/2) | recommendation request/response schema drift、trust/no-result fields | JSON parse checks pass for schemas and examples |
+
+**Verification gaps / follow-up**：
+
+- API full `mvn test` currently compiles, then existing Spring integration startup fails because `SUPABASE_PASSWORD` is empty and `supabaseDataSource` attempts SCRAM auth. Need test profile or CI secret before marking full-suite green.
+- `gstack` browser QA did not run locally because the browse setup requires `bun`, which is not installed. Run after installing `bun` or in an environment with gstack browse already built.
+- Exposed local secrets still require real rotation in Supabase / Cloudflare consoles. The extractor PR adds policy and safer sync behavior, but cannot rotate external credentials by itself.
 
 ---
 
@@ -82,90 +107,184 @@ CardSense 是一個以**情境式卡片比較**為核心的信用卡推薦平台
 |------|------|------|
 | GET | `/health` | 健康檢查 |
 | GET | `/v1/banks` | 銀行列表 |
-| GET | `/v1/cards` | 卡片目錄（bank / scope / eligibilityType 篩選） |
-| GET | `/v1/cards/{cardCode}/promotions` | 卡片優惠列表（依 category 分組） |
+| GET | `/v1/cards` | 卡片目錄，支援 bank / scope / eligibilityType 篩選 |
+| GET | `/v1/cards/{cardCode}/promotions` | 卡片優惠列表，依 category 分組 |
 | GET | `/v1/cards/{cardCode}/plans` | 卡片 benefit plan 列表 |
 | GET | `/v1/exchange-rates` | 系統預設點數 / 里程估值牌告 |
 | POST | `/v1/recommendations/card` | 情境推薦 |
 
-Frontend 消費的穩定欄位：`recommendations[].estimatedReturn`、`promotionBreakdown`、`disclaimer`、`activePlan`
+Frontend 穩定消費欄位：`recommendations[].estimatedReturn`、`promotionBreakdown`、`disclaimer`、`activePlan`。下一階段需補強：`confidence`、`matchedRules`、`excludedRules`、`assumptions`、`source`、`verifiedAt`、`validUntil`。
 
 ---
 
-## Roadmap
+## 產品北極星
 
-### 🔥 社群傳播前必做（Pre-Launch Polish）
+### 選擇
 
-CardSense 的核心傳播路徑：用戶算卡 → 覺得結果值得截圖 → 發 PTT/Dcard。以下 6 項是這條路徑上的瓶頸。
+| 決策 | 選擇 | 原因 |
+|------|------|------|
+| Primary job | 幫使用者決定「這筆消費刷哪張卡」 | 最能和 listing / SEO 型網站差異化 |
+| 初期資料範圍 | 少量高頻、可驗證場景 | 可信 50 個場景比模糊 7,000 筆資料更有價值 |
+| 排名依據 | eligibility + caps + thresholds 後的有效回饋 | 使用者要的是實拿，不是最高標題%數 |
+| My Wallet | local-first，卡名即可，不收卡號 | 降低隱私與使用門檻，未來可加 account sync |
+| SEO | 少量高信任 scenario / merchant pages | 每頁都要回到互動式決策流程 |
+| AI | 可輔助 parsing / explanation draft / QA，不做 unchecked final decision | 金錢決策需要 deterministic output |
 
-#### 1. 商家搜尋入口前置（Web）
-**問題**：merchantName 輸入目前藏在進階選項，用戶的第一個問題「我去全聯刷哪張？」沒有明顯入口。  
-**目標**：商家名稱成為首頁主要輸入路徑之一，直接觸發推薦。
-**進度（2026-04-26）**：已完成第二階段基礎校準。首頁計算機 `/` 與 `/recommend` 會在沒有場景專屬商家建議時顯示 registry 派生的熱門 shortlist（全聯、家樂福、momo、蝦皮、Agoda、星巴克、Uber Eats、麥當勞），並以單元測試鎖住排序與 registry 對齊。
+### 已接受的預設決策
 
-#### 2. 高頻商家覆蓋補強（Extractor + Contracts）
-**問題**：精準計算的前提是資料完整。若商家映射缺失，算出來的數字是殘缺答案。  
-**目標**：確保台灣前 200 高頻商家（全聯、家樂福、momo、蝦皮、麥當勞、星巴克、POYA、Agoda 等）在 5 家銀行中的 VENUE condition 正確標注，讓同一商家能同時比到多張卡。  
-**衡量**：輸入「全聯」→ 至少有 3 張以上不同銀行的卡回傳結果。
-**進度（2026-04-26）**：補上 API 高頻商家 alias canonicalization，讓「全聯」可命中 `PXMART` / `PX Mart` / 「大全聯」等 VENUE 標記；新增跨 CATHAY、ESUN、TAISHIN 三銀行的 DecisionEngine 測試。Contracts 新增 `POYA`，Extractor 的 DRUGSTORE inference 也會產生 `VENUE=POYA`。
-**Supabase audit（2026-04-26）**：production `promotion_current` active + `RECOMMENDABLE` 共 587 筆。`Agoda` 已達 4 家銀行 / 6 張卡 / 9 promotions；初查 `全聯/PXMART` 只有 CATHAY + TAISHIN 兩家銀行 / 2 張卡 / 2 promotions，ESUN Unicard 超市量販三筆已是 `RECOMMENDABLE` 但缺 `PXMART` VENUE。已修正 extractor 的 ESUN Unicard 百大指定消費生活採買/超市量販 variant，並 scoped patch production Supabase 三筆 ESUN_UNICARD supermarket rows 補上 `VENUE=PXMART`。目前 `全聯/PXMART` 已達 CATHAY + ESUN + TAISHIN 三家銀行 / 3 張卡 / 5 promotions。FUBON / CTBC production 目前沒有全聯文字或全聯 VENUE，只有一般消費 rows，暫不升級以免把 general reward 誤標成指定商家優惠。
+| 問題 | 目前預設 |
+|------|----------|
+| My Wallet local-only 或 account-backed？ | local-first，但資料模型保留未來 account sync 空間 |
+| MVP merchant 數量？ | 20-50 個高頻台灣場景，重質不重量 |
+| MVP 是否放 affiliate link？ | 可放但必須揭露，且不得影響有機排序 |
+| AI 是否對使用者可見？ | 不作為 primary chatbot；只用於 parsing、explanation draft、QA 輔助 |
+| 第一個 public growth asset？ | methodology/trust page + 3-5 個 scenario pages |
 
-#### 3. 卡片基本資料可信度（Extractor + API）
-**問題**：用戶算完會去確認年費、條件等基本資料；若有誤，整個推薦結果的信任度崩塌。  
-**目標**：5 家銀行現有卡的年費、eligibilityType、基本回饋欄位確認正確。對資料缺口要在前端明確標示（而非假裝完整）。
+### 暫緩事項
 
-#### 4. 優惠定期更新維護機制（Ops / Extractor）
-**問題**：銀行優惠每季更新，目前沒有標準化的「定期重跑 + 驗證 + 部署」流程，資料新鮮度靠手動觸發。  
-**目標**：建立 refresh 排程（月跑或季跑）+ 快速 diff 報告（新增/消失/異動優惠），讓維護成本可控。  
-**候選方案**：Cron job 觸發 `refresh_and_deploy.py` + 結果摘要 Discord 通知。
-
-#### 5. 行動裝置體驗（Web）
-**問題**：PTT/Dcard 用戶多半用手機看、截圖。若手機體驗卡頓或版面跑掉，傳播就在這裡斷掉。  
-**目標**：首頁計算機、推薦結果頁、My Wallet 在 375px 以上裝置流暢可用；截圖在手機上能正確觸發並輸出完整圖片。
-
-#### 6. 首次使用者 30 秒引導（Web）
-**問題**：新用戶打開首頁不確定要輸入什麼、這個工具跟一般卡片比較網站有何不同。  
-**目標**：首頁一句話說清楚產品主張（例：「輸入消費情境，算出每張卡的實際回饋金額」）；首次進入有輕量引導或預設情境範例，讓用戶 30 秒內產出第一次結果。
+- 不追全銀行、全信用卡、全 SEO 類別頁。
+- 不擴張到貸款、保險。
+- 不以 affiliate CTA 作為 MVP 排序中心。
+- 不把 AI chatbot 當 primary UX。
+- 不在 freshness / eligibility 不足時硬給高信心推薦。
 
 ---
 
-### 🟢 進行中 / 持續細化
+## 30/60/90 Roadmap
 
-| 項目 | 說明 |
-|------|------|
-| **哩程 / 點數估值深化** | `MILES` / `POINTS` API、基礎估值已上線；持續補充航空計畫（Asia Miles、EVA Infinity、JAL）與轉點情境，強化 explainability |
-| **截圖社群投放** | Canvas 分享圖已實作；定期於 PTT 信用卡板、Dcard 投放真實算卡比較圖 |
-| **Feedback 飛輪** | Discord 即時通知已上線；將回報資料轉化為 extractor 補強優先順序 |
+### 0-30 天：Prove The Decision Wedge
+
+| Workstream | Deliverable |
+|------------|-------------|
+| Product | My Wallet + transaction input + one best card + 1-2 alternatives |
+| UX | 首頁改成付款決策語境；mobile 以 Scenario → Wallet → Recommendation progressive disclosure 呈現 |
+| Engine | 修 `/calc`、`channel=ALL` wildcard、invalid request 400；處理 cap、threshold、date、registration |
+| Trust | Result panel 顯示 source freshness、valid period、matched/excluded rules、assumptions、confidence |
+| Data | 20-50 個高頻台灣 merchants/scenarios verified rules |
+| QA | momo、Shopee、Agoda、Uber Eats、LINE Pay、Apple Pay、Costco、保費、海外消費 regression cases |
+| Security | rotate exposed local secrets；建立 extractor credential policy |
+
+### 31-60 天：Build Retention
+
+| Workstream | Deliverable |
+|------------|-------------|
+| Product | manual cap usage / reward ledger / bonus progress |
+| Data | user correction loop：reward posted / did not post / merchant categorized differently |
+| UX | promotion expiry alerts；best-card changed alerts |
+| Engine | confidence score based on source freshness、merchant certainty、rule completeness |
+| Growth | 3-5 個高信任 scenario pages + methodology page |
+| Ops | staging table + validation + atomic promote 設計與第一版落地 |
+
+### 61-90 天：Create Defensibility
+
+| Workstream | Deliverable |
+|------------|-------------|
+| Product | personal card strategy dashboard：caps、年費門檻、首刷任務 |
+| Data | source snapshots、promotion change history、versioned audit trail |
+| Engine | scenario simulation：amount changes、cap used、not new customer、wrong payment method |
+| Trust | public methodology page + affiliate policy |
+| Growth | CardSense Verified pages for top 100 merchants/scenarios |
 
 ---
 
-### ⏸️ 凍結 / 暫緩
+## P0 Implementation Backlog
 
-| 項目 | 原因 |
-|------|------|
-| 新銀行擴充（MEGA / FIRST 等） | 先把 5 家主力銀行體驗打磨完整再擴廣度 |
-| API 商業化（Stripe Billing） | 延後至使用者基礎建立後 |
-| `stackability` 顯式欄位 | 目前 raw_payload 還原可行，暫不拆欄位 |
-| Fubon targeted re-extraction | INSURANCE / INFINITE / DIGITALLIFE 3 張消失的卡，排入高頻商家補強後處理 |
-| 傳統卡片目錄深度優化 | 維持堪用，不與純內容比價網競爭靜態頁面 |
+| ID | 任務 | 主要檔案 / repo | 驗收條件 |
+|----|------|-----------------|----------|
+| P0-1 | 修復 `/calc` route 與 share URL canonical path | `cardsense-web/src/App.tsx`, `CalcPage.tsx`, `ShareButton.tsx` | production `/calc` 可載入或 redirect；分享 URL 不再導向空白 shell |
+| P0-2 | `channel=ALL` wildcard | `cardsense-api/.../DecisionEngine.java` | request `ONLINE/OFFLINE` 可命中 `ALL` promotions；新增單元測試 |
+| P0-3 | invalid request 回 `400` | `RecommendationController.java`, `RecommendationRequest.java` | invalid `category/paymentMethod/channel/maxResults` 不再回 200 empty |
+| P0-4 | Trust Result Panel | `ResultPanel.tsx`, `RecommendationResults.tsx`, API response contract | 顯示 source、verifiedAt、validUntil、matched/excluded rules、assumptions、confidence |
+| P0-5 | No-result reason engine + UI | API DecisionEngine + web result state | 無推薦時能說明被排除的 payment method、channel、merchant、date、registration、cap |
+| P0-6 | Secrets rotation / credential policy | `cardsense-extractor`, deployment secrets | local `.env` 移除高權限實值；service role 不作為日常 importer |
+
+---
+
+## P1 Implementation Backlog
+
+| ID | 任務 | 主要檔案 / repo | 驗收條件 |
+|----|------|-----------------|----------|
+| P1-1 | Contract-first recommendation tests | `cardsense-contracts`, `cardsense-api` | Java model 與 JSON Schema request/response fixtures 不 drift |
+| P1-2 | Merchant registry generated matcher | `merchant-registry.json`, API matcher | API aliases 由 registry 派生，不再靠分散 hardcoded map |
+| P1-3 | `stackability` first-class | contracts → Pydantic → DB → repository | 不只存在 `raw_payload_json`，推薦可用結構化欄位解釋 |
+| P1-4 | Atomic publish | extractor Supabase store/versioning | staging + validation + promote，避免 delete-then-upsert 空窗 |
+| P1-5 | Mobile progressive disclosure | `cardsense-web` calculator/result | 375px 以上可順暢完成 input → result → explanation |
+| P1-6 | Public API protection | API security/filter/edge | recommendation POST 有 body size、rate limit、基本 abuse protection |
+
+---
+
+## Carried But Not Yet Scheduled
+
+以下 review findings 需要保留在追蹤範圍內，但不應打斷 0-30 天 decision wedge：
+
+| 項目 | 來源風險 | 建議排程 |
+|------|----------|----------|
+| `recommendation_audits` persistent audit trail | 金錢決策需要 request/response、evaluated promo versions、engine version、latency、error 可追溯 | 60-90 天，source snapshots / promotion history 一起設計 |
+| `promoId` logical key hardening | 同標題同日活動可能互相覆蓋，需納入 source section、planId、condition hash | 31-60 天，與 atomic publish / versioning 同批 |
+| Feedback widget upload security | browser 直接 anon upload/insert 風險高 | P1 security batch，改 backend/Edge Function、CAPTCHA、MIME/size validation、RLS |
+| Pinned contracts dependency | Vercel build 不應 clone mutable contracts branch | P1 DX/Ops batch，改 pinned commit/tag/package |
+| Secret scanning | 已發現 local secret 風險，需防止再次進 repo | P0 security follow-up，導入 Gitleaks / secretlint |
+
+---
+
+## Subagent-Driven Development 執行計畫
+
+使用 `superpowers:subagent-driven-development` 時，這份 backlog 要拆成「一次一個 implementer task」，每個 task 經過兩段 review：spec compliance reviewer → code quality reviewer。避免多個實作 subagent 同時改同一 repo 或同一檔案。
+
+### 建議任務順序
+
+| 順序 | Task | Scope | Exit criteria | gstack evidence |
+|------|------|-------|---------------|-----------------|
+| A | `/calc` route + share URL 修復 | `cardsense-web` routing 與 share URL | `/calc` 不空白；query params 保留；`npm run build` pass | `2026-04-30-calc-desktop.png`, `2026-04-30-calc-mobile.png` |
+| B | DecisionEngine request correctness | `channel=ALL` wildcard + invalid request 400 | API tests 覆蓋 `ALL`、invalid enum、invalid maxResults；既有 recommendation tests 不 regress | 若影響 production flow，補 `2026-04-30-decision-flow-desktop.png` |
+| C | Trust Result Panel contract slice | API response trust fields + frontend display | 結果顯示 source、verifiedAt、validUntil、matched/excluded rules、assumptions、confidence；缺資料有 fallback | `2026-04-30-trust-panel-desktop.png`, `2026-04-30-trust-panel-mobile.png` |
+| D | No-result reasons | engine 排除原因 + web no-result state | 系統錯誤不被包成 no-result；reason categories 可測且可讀 | `2026-04-30-no-result-mobile.png` |
+| E | Merchant registry matcher | 從 `merchant-registry.json` 產生或載入 API matcher | 全聯、momo、Agoda、Uber Eats、LINE Pay、Apple Pay regression scenarios pass | `2026-04-30-merchant-registry-flow.png` |
+| F | Security/Ops hardening plan | secrets rotation checklist、least-privilege importer、atomic publish migration plan | repo 不新增 secret；credential policy 可執行；atomic publish migration 有 rollback | 不需 browser evidence；需附 command/test evidence |
+
+### 每個 task 的交付格式
+
+- Implementer must report：changed files、tests run、manual verification、concerns。
+- Spec reviewer must answer：是否符合本文件對應 ID 的驗收條件、有無 overbuild / underbuild。
+- Code quality reviewer must answer：可維護性、測試品質、錯誤處理、cross-repo contract risk。
+- Controller 才能標記 task done；reviewer 有 open issue 時不得進下一個 task。
+
+---
+
+## gstack 驗證計畫
+
+每個前端或 production-facing task 完成後，用 `gstack` 做瀏覽器層驗證，至少覆蓋 desktop 與 375px mobile。
+
+| 驗證點 | gstack 操作 | 通過條件 |
+|--------|-------------|----------|
+| Production smoke | `goto https://cardsense-web.vercel.app`、`text`、`console --errors`、`network` | 首頁載入，無關鍵 JS error，API failure 有可理解狀態 |
+| `/calc` share route | `goto https://cardsense-web.vercel.app/calc?...` | 不空白；可 redirect 或正常顯示 calculator；query params 不丟失 |
+| Decision flow | `snapshot -i`、fill merchant/payment/amount、submit、`snapshot -D` | 30 秒內可以從情境輸入到推薦或明確 waiting/retry state |
+| Mobile checkout UX | `viewport 375x812`、`screenshot --viewport` | input、primary recommendation、理由區不 overlap；advanced settings 不壓過主流程 |
+| Trust panel | result screenshot + text inspection | 可看到 source freshness、valid period、matched/excluded rules 或明確缺資料 fallback |
+| No-result state | 使用刻意不匹配條件 | 顯示具體 reason，不只顯示空列表 |
+| Cold start | reload production after idle | 後端喚醒中有 retry/cold-start message，不只 skeleton |
+
+gstack evidence 應存入當次 review 或 task folder，檔名包含日期、surface、viewport，例如 `2026-04-30-calc-mobile.png`。
 
 ---
 
 ## 已知限制
 
-- POINTS / MILES 估值粒度仍偏粗，高階哩程計畫估值持續演進中
-- `STACK_ALL_ELIGIBLE` 為 heuristic aggregation，待 stackability 標注完整後升級
-- Break-even 為 pairwise 分析，非完整最佳化模型
-- Real extractor 依賴外部銀行網站可用性，頁面改版需人工調整 heuristic
-- Merchant registry 190+ 筆，高頻商家補強進行中（見 Roadmap #2）
+- POINTS / MILES 估值仍偏粗，高階哩程計畫估值需持續演進。
+- `STACK_ALL_ELIGIBLE` 仍偏 heuristic，待 stackability 結構化後升級。
+- Break-even 目前是 pairwise 分析，尚非完整最佳化模型。
+- Real extractor 依賴銀行網站可用性，頁面改版需要人工調整。
+- Merchant registry 已有基礎，但高頻商家到 promotion rules 的 end-to-end 覆蓋仍需補強。
+- Production backend cold start 約可到 60-75 秒，必須被視為正式 UX 情境。
 
 ---
 
 ## 相關文件
 
+- [CardSense Review 2026-04-29](./reviews/2026-04-29-cardsense-review/CardSense-Review-2026-04-29.md) — product / UX / QA / engineering / security 綜合 review
+- [CardSense Product Direction vs iCard.AI](./reviews/2026-04-29-cardsense-review/CardSense-Product-Direction-vs-iCardAI.md) — 下一階段產品北極星與 30/60/90 roadmap
 - [cardsense-api/IMPLEMENTATION_CHECKLIST.md](../cardsense-api/IMPLEMENTATION_CHECKLIST.md) — API 待辦細項
 - [CardSense-Bank-Promo-Review-Workflow.md](./CardSense-Bank-Promo-Review-Workflow.md) — 優惠審查與 benefit-plan 流程
 - [fleet-command/specs/spec-cardSense.md](./specs/spec-cardSense.md) — 完整專案規格書
 - [fleet-command/docs/Supabase-Discord-Webhook-Setup.md](./docs/Supabase-Discord-Webhook-Setup.md) — Feedback Widget 串接說明
-
-*Last updated: 2026-04-24*
