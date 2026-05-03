@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-05-03",
+  "workspace": {
+    "name": "cardsense-workspace",
+    "sourceOfTruth": "../CardSense-Status.md",
+    "liveUrl": "https://cardsense-web.vercel.app"
+  },
+  "projects": [
+    {
+      "id": "cardsense-web",
+      "name": "CardSense Web",
+      "repo": "WaddleStudio/cardsense-web",
+      "path": "../cardsense-web",
+      "role": "Frontend recommendation UX and calculator surface",
+      "stage": "Live",
+      "health": "healthy",
+      "focus": "Merchant-first calculator, My Wallet, trust result panel, mobile progressive disclosure",
+      "stack": ["React 19", "TypeScript 5.9", "Vite 8", "Tailwind CSS 4", "shadcn/ui"],
+      "commands": ["npm run build", "npm run test:unit"],
+      "links": {
+        "github": "https://github.com/WaddleStudio/cardsense-web",
+        "production": "https://cardsense-web.vercel.app",
+        "calc": "https://cardsense-web.vercel.app/calc?amount=1000"
+      }
+    },
+    {
+      "id": "cardsense-api",
+      "name": "CardSense API",
+      "repo": "WaddleStudio/cardsense-api",
+      "path": "../cardsense-api",
+      "role": "Deterministic recommendation API runtime and repository adapters",
+      "stage": "Production runtime",
+      "health": "healthy",
+      "focus": "DecisionEngine, request validation, merchant matching, trust metadata passthrough, public POST protection",
+      "stack": ["Java 21", "Spring Boot", "SQLite", "Supabase", "Maven"],
+      "commands": ["mvn test"],
+      "links": {
+        "github": "https://github.com/WaddleStudio/cardsense-api",
+        "health": "https://cardsense-api.onrender.com/health"
+      }
+    },
+    {
+      "id": "cardsense-extractor",
+      "name": "CardSense Extractor",
+      "repo": "WaddleStudio/cardsense-extractor",
+      "path": "../cardsense-extractor",
+      "role": "Promotion extraction, normalization, import, and sync pipeline",
+      "stage": "Ops pipeline",
+      "health": "watch",
+      "focus": "Bank promo extraction, SQLite import, Supabase sync, atomic publish, credential policy",
+      "stack": ["Python 3.13", "uv", "Pydantic", "SQLite", "Supabase"],
+      "commands": ["uv run pytest", "uv run python jobs/refresh_and_deploy.py --help"],
+      "links": {
+        "github": "https://github.com/WaddleStudio/cardsense-extractor"
+      }
+    },
+    {
+      "id": "cardsense-contracts",
+      "name": "CardSense Contracts",
+      "repo": "WaddleStudio/cardsense-contracts",
+      "path": "../cardsense-contracts",
+      "role": "Shared schemas, DTOs, taxonomies, merchant registry, stackability, benefit plans",
+      "stage": "Shared foundation",
+      "health": "healthy",
+      "focus": "Recommendation request/response schemas, trust fields, no-result fields, merchant taxonomy",
+      "stack": ["JSON Schema"],
+      "commands": ["rg -n \"TRAVEL\" promotion recommendation taxonomy"],
+      "links": {
+        "github": "https://github.com/WaddleStudio/cardsense-contracts"
+      }
+    },
+    {
+      "id": "fleet-command",
+      "name": "Fleet Command",
+      "repo": "WaddleStudio/fleet-command",
+      "path": ".",
+      "role": "Workspace control plane, specs, dashboard, agent rules, and shared skills",
+      "stage": "Control plane",
+      "health": "healthy",
+      "focus": "Short Markdown source of truth plus dashboard for progress, health, checks, and evidence links",
+      "stack": ["Markdown", "Static HTML", "Python tests"],
+      "commands": ["python scripts/render_workspace_assets.py --check", "python -m unittest"],
+      "links": {
+        "status": "../CardSense-Status.md",
+        "dashboard": "./index.html"
+      }
+    }
+  ]
+}

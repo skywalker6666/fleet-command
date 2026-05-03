@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-05-03",
+  "releases": [
+    {
+      "id": "2026-04-30-p0-p1-repair",
+      "date": "2026-04-30",
+      "title": "Repair batch evidence",
+      "summary": "Completed repair evidence is linked here so the main dashboard can stay focused on current progress and open work.",
+      "evidence": "../reviews/2026-05-03-post-merge-chrome/",
+      "prs": [
+        {
+          "repo": "cardsense-web",
+          "number": 5,
+          "url": "https://github.com/WaddleStudio/cardsense-web/pull/5"
+        },
+        {
+          "repo": "cardsense-api",
+          "number": 3,
+          "url": "https://github.com/WaddleStudio/cardsense-api/pull/3"
+        },
+        {
+          "repo": "cardsense-extractor",
+          "number": 3,
+          "url": "https://github.com/WaddleStudio/cardsense-extractor/pull/3"
+        },
+        {
+          "repo": "cardsense-contracts",
+          "number": 2,
+          "url": "https://github.com/WaddleStudio/cardsense-contracts/pull/2"
+        },
+        {
+          "repo": "fleet-command",
+          "number": 2,
+          "url": "https://github.com/WaddleStudio/fleet-command/pull/2"
+        }
+      ],
+      "verification": [
+        "cardsense-web: npm run build pass; npm run test:unit pass",
+        "cardsense-api: mvn test pass",
+        "cardsense-extractor: uv run pytest tests/test_supabase_store.py pass",
+        "production smoke: /, /calc?amount=1000, /health, /v1/cards"
+      ]
+    }
+  ]
+}

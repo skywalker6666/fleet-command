@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Fleet Command Dashboard</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Fleet Command</p>
+        <h1>CardSense Control Plane</h1>
+      </div>
+      <nav aria-label="Dashboard links">
+        <a href="../CardSense-Status.md">Status MD</a>
+        <a href="https://cardsense-web.vercel.app">Live App</a>
+        <a href="../reviews/2026-05-03-post-merge-chrome/">Evidence</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="summary-grid" aria-label="Summary">
+        <div class="summary-panel">
+          <span class="label">Workspace</span>
+          <strong id="workspaceName">Loading</strong>
+          <span id="workspaceMeta">Reading dashboard data</span>
+        </div>
+        <div class="summary-panel">
+          <span class="label">Overall Status</span>
+          <strong id="overallStatus">Loading</strong>
+          <span id="overallHeadline">Checking project health</span>
+        </div>
+        <div class="summary-panel">
+          <span class="label">Last Production Smoke</span>
+          <strong id="lastSmoke">Loading</strong>
+          <span>Home, /calc, API health, cards list</span>
+        </div>
+      </section>
+
+      <section class="section-block">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Project Health</p>
+            <h2>Repos</h2>
+          </div>
+          <p>Repo health only. Solved issues stay in evidence.</p>
+        </div>
+        <div id="projectGrid" class="project-grid" aria-live="polite"></div>
+      </section>
+
+      <section class="section-block">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Roadmap</p>
+            <h2>30 / 60 / 90</h2>
+          </div>
+          <p>Progress at a glance. Details stay in Markdown.</p>
+        </div>
+        <div id="roadmapGrid" class="roadmap-grid" aria-live="polite"></div>
+      </section>
+
+      <section class="split-section">
+        <div class="section-block">
+          <div class="section-heading compact">
+            <div>
+              <p class="eyebrow">Action Queue</p>
+              <h2>Open Work</h2>
+            </div>
+          </div>
+          <div id="actionQueue" class="action-list" aria-live="polite"></div>
+        </div>
+
+        <div class="section-block">
+          <div class="section-heading compact">
+            <div>
+              <p class="eyebrow">Checks</p>
+              <h2>Latest Signals</h2>
+            </div>
+          </div>
+          <div id="checksList" class="checks-list" aria-live="polite"></div>
+          <details class="release-drawer">
+            <summary>Release evidence</summary>
+            <div id="releaseList" class="release-list"></div>
+          </details>
+        </div>
+      </section>
+
+      <section id="loadError" class="load-error" hidden>
+        <h2>Dashboard data did not load</h2>
+        <p>Serve this folder over HTTP so the browser can read the JSON files.</p>
+        <code>cd fleet-command/dashboard && python -m http.server 5177</code>
+      </section>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>

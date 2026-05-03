@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-05-03",
+  "summary": {
+    "status": "watch",
+    "headline": "Open work: security, data, QA, ops.",
+    "lastProductionSmoke": "2026-05-03",
+    "evidencePath": "../reviews/2026-05-03-post-merge-chrome/"
+  },
+  "healthChecks": [
+    {
+      "id": "prod-home",
+      "label": "Production home",
+      "status": "pass",
+      "lastRun": "2026-05-03",
+      "evidence": "../reviews/2026-05-03-post-merge-chrome/chrome-smoke-report.json"
+    },
+    {
+      "id": "prod-calculator",
+      "label": "Production calculator route",
+      "status": "pass",
+      "lastRun": "2026-05-03",
+      "evidence": "../reviews/2026-05-03-post-merge-chrome/chrome-smoke-report.json"
+    },
+    {
+      "id": "api-health",
+      "label": "API health and cards smoke",
+      "status": "pass",
+      "lastRun": "2026-05-03",
+      "evidence": "../reviews/2026-05-03-post-merge-chrome/chrome-smoke-report.json"
+    }
+  ],
+  "actionQueue": [
+    {
+      "id": "secret-rotation",
+      "priority": "P0",
+      "title": "Rotate Supabase and Cloudflare secrets in vendor consoles",
+      "owner": "Security/Ops",
+      "status": "blocked",
+      "nextStep": "Rotate external credentials, update deployment secrets, then record completion in the runbook.",
+      "source": "../CardSense-Status.md#open-follow-ups"
+    },
+    {
+      "id": "secret-scanning",
+      "priority": "P0",
+      "title": "Add secret scanning guardrail",
+      "owner": "Security/Ops",
+      "status": "next",
+      "nextStep": "Choose Gitleaks or secretlint and wire it into local/CI verification.",
+      "source": "../CardSense-Status.md#open-follow-ups"
+    },
+    {
+      "id": "recommendation-audits",
+      "priority": "P1",
+      "title": "Design persistent recommendation audit trail",
+      "owner": "Data/Trust",
+      "status": "next",
+      "nextStep": "Capture request, response, evaluated promo versions, engine version, latency, and error fields.",
+      "source": "../CardSense-Status.md#open-follow-ups"
+    },
+    {
+      "id": "feedback-upload-security",
+      "priority": "P1",
+      "title": "Move feedback widget uploads behind backend protection",
+      "owner": "Security/Product",
+      "status": "next",
+      "nextStep": "Replace direct anon upload/insert with backend or Edge Function, CAPTCHA, MIME/size validation, and RLS.",
+      "source": "../CardSense-Status.md#open-follow-ups"
+    },
+    {
+      "id": "contracts-pinning",
+      "priority": "P1",
+      "title": "Pin contracts dependency in Vercel build",
+      "owner": "DX/Ops",
+      "status": "next",
+      "nextStep": "Replace mutable branch clone with pinned commit, tag, or package reference.",
+      "source": "../CardSense-Status.md#open-follow-ups"
+    }
+  ]
+}

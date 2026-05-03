@@ -72,7 +72,15 @@ SEEDCRAFT → RTA             補習班推薦 → 評論可信度
 
 ## 重點文件索引
 
-- [CardSense-Status.md](./CardSense-Status.md) — CardSense 跨 repo 詳細狀態、完成進度、Roadmap、快速開始
+- [CardSense-Status.md](./CardSense-Status.md) — CardSense text source of truth: product direction, current capability, roadmap, and open follow-ups.
+- [dashboard/index.html](./dashboard/index.html) — CardSense fleet dashboard: repo health, roadmap progress, open action queue, latest checks, and release evidence links.
+
+Run the dashboard over HTTP so the browser can read JSON data:
+
+```bash
+cd dashboard
+python -m http.server 5177
+```
 
 ## 與各專案 Code Repo 的關係
 
