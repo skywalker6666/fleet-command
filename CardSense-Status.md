@@ -6,7 +6,7 @@ CardSense is the Taiwan credit-card payment decision engine for answering one ch
 
 > **Live**: https://cardsense-web.vercel.app
 > **Dashboard**: [fleet-command/dashboard](./dashboard/index.html)
-> **Last updated**: 2026-05-03 (0-30 day wedge 90% complete)
+> **Last updated**: 2026-05-03
 > **Direction docs**: [2026-04-29 Review](./reviews/2026-04-29-cardsense-review/CardSense-Review-2026-04-29.md) + [Product Direction vs iCard.AI](./reviews/2026-04-29-cardsense-review/CardSense-Product-Direction-vs-iCardAI.md)
 
 ---
@@ -27,15 +27,14 @@ The request path stays deterministic. LLMs may help parsing, drafting explanatio
 
 | Area | Current state |
 |------|---------------|
-| Product | Merchant-first calculator, My Wallet, benefit plan switching, recommendation result, and share flow exist. |
-| Frontend | React/Vite app is live on Vercel with `/` and `/calc` surfaces. |
-| API | Spring Boot deterministic `DecisionEngine` reads production data and serves recommendation responses. |
-| Data | Extractor, contracts, SQLite, Supabase sync, and production API path are connected. |
-| Banks | E.SUN, CATHAY, TAISHIN, FUBON, CTBC. |
-| Merchants | Focus is high-frequency Taiwan scenarios such as Pxmart, momo, Shopee, Agoda, Uber Eats, LINE Pay, Apple Pay, Costco, insurance, overseas, and Japan spend. |
-| Trust | Recommendation response and UI can carry confidence, source, verified date, valid period, matched/excluded rules, and assumptions. |
+| Product | Merchant-first calculator (「這筆消費該刷哪張卡」), My Wallet, benefit plan switching, recommendation result, and share flow. |
+| Frontend | React/Vite app live on Vercel. Mobile progressive disclosure: exchange rate and plan switching behind 進階設定. Cold start banner with 60s retry messaging. |
+| API | Spring Boot deterministic `DecisionEngine`: channel=ALL wildcard, invalid enum → 400, per-IP rate limiting, body size limit. |
+| Data | E.SUN, CATHAY, TAISHIN, FUBON, CTBC. High-frequency merchants: 全聯, momo, Shopee, Agoda, Uber Eats, LINE Pay, Apple Pay, Costco, insurance, overseas, Japan spend. |
+| Trust | Result panel shows confidence, validUntil, matched promo count, source URL, and no-result reason. Atomic promotion publishing. |
+| QA | Regression suite covers momo, Shopee, Agoda, Uber Eats, Apple Pay, Costco, insurance, and overseas spend (35 passing). |
 
-The dashboard shows repo health, roadmap progress, open action queue, latest checks, and release evidence links. This Markdown file stays intentionally short and keeps product direction as the source of truth.
+The dashboard shows repo health, roadmap progress, open action queue, latest checks, and release evidence links.
 
 ---
 
@@ -52,18 +51,6 @@ The dashboard shows repo health, roadmap progress, open action queue, latest che
 ---
 
 ## Roadmap
-
-### 0-30 Days: Prove The Decision Wedge
-
-| Workstream | Outcome |
-|------------|---------|
-| Product | My Wallet + transaction input + one best card + 1-2 alternatives. |
-| UX | Checkout-time flow with mobile progressive disclosure. |
-| Engine | Deeper cap, threshold, date, registration, channel, and eligibility coverage. |
-| Trust | Result explanations that are readable enough for money decisions. |
-| Data | 20-50 high-frequency merchants/scenarios with verified rules. |
-| QA | Regression cases for the top merchants and payment scenarios. |
-| Security | External secret rotation and ongoing secret scanning. |
 
 ### 31-60 Days: Build Retention
 
@@ -92,18 +79,16 @@ The dashboard shows repo health, roadmap progress, open action queue, latest che
 
 | Item | Why it matters | Suggested timing |
 |------|----------------|------------------|
-| Supabase / Cloudflare secret rotation | Repo-side policy exists, but vendor-console credentials still need real rotation. | Security/Ops follow-up |
-| Secret scanning | Prevent local or deployment secrets from entering repos again. | Security/Ops follow-up |
-| `recommendation_audits` | Money decisions need request/response, evaluated promo versions, engine version, latency, and errors. | 60-90 days |
-| `promoId` logical key hardening | Same-title same-day promotions can collide without stronger source keys. | 31-60 days |
-| Feedback widget upload security | Direct anon upload/insert is too exposed for production. | P1 security batch |
-| Pinned contracts dependency | Vercel builds should not clone mutable contracts branches. | P1 DX/Ops batch |
+| Supabase / Cloudflare secret rotation | Vendor-console credentials still need real rotation. | Security — do now |
+| Secret scanning | Prevent secrets from entering repos. | Security — do now |
+| `recommendation_audits` | Money decisions need request/response, promo versions, engine version, latency, and errors. | 60-90 days |
+| `promoId` logical key hardening | Same-title same-day promotions can collide. | 31-60 days |
+| Feedback widget upload security | Direct anon upload/insert too exposed for production. | 31-60 days |
+| Pinned contracts dependency | Vercel builds should not clone mutable contracts branches. | 31-60 days |
 
 ---
 
 ## Evidence
-
-Completed repair details are intentionally not tracked on the main dashboard. Use these evidence paths when history matters:
 
 - [2026-05-03 Chrome post-merge evidence](./reviews/2026-05-03-post-merge-chrome/)
 - [2026-04-29 CardSense review](./reviews/2026-04-29-cardsense-review/CardSense-Review-2026-04-29.md)
