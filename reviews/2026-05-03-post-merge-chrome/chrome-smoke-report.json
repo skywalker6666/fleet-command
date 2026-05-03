@@ -1,0 +1,58 @@
+{
+  "ranAt": "2026-05-03T09:32:35.430Z",
+  "browser": "Google Chrome via Playwright channel=chrome",
+  "results": [
+    {
+      "name": "home-desktop",
+      "url": "https://cardsense-web.vercel.app/",
+      "status": 200,
+      "elapsedMs": 93723,
+      "textLength": 1322,
+      "rootHtmlLength": 48747,
+      "title": "CardSense — 情境式信用卡推薦",
+      "textSample": "CardSense 計算機 推薦 卡片目錄 連線中 Card Calculator Start with a merchant or spending scenario, then compare the best cards side by side. 消費金額 NT$ 1,200 7 8 9 4 5 6 1 2 3 0 C 500 1K 3K 5K Merchant-first entry Ask questions like \"Which card should I use at Pxmart?\" by starting with the merchant first. Popular merchant shortcuts 全聯 家樂福 momo 蝦皮 Agoda 星巴克 Uber Eats Suggested merchants for this category Uber Eats foodpanda 星巴克 麥當勞 王品 饗賓餐旅 豆府餐飲 勝博殿 Cold Stone EZTABLE Smith & Wollensky 台中中山招待所 犇鐵板燒 乾杯燒肉 瓦城料理 爭鮮餐",
+      "consoleErrorsOrWarnings": [],
+      "failedRequests": [],
+      "screenshot": "D:\\Projects\\cardsense-workspace\\fleet-command\\reviews\\2026-05-03-post-merge-chrome\\home-desktop.png"
+    },
+    {
+      "name": "calc-desktop",
+      "url": "https://cardsense-web.vercel.app/calc?amount=1000",
+      "status": 200,
+      "elapsedMs": 16233,
+      "textLength": 2286,
+      "rootHtmlLength": 76591,
+      "title": "CardSense — 情境式信用卡推薦",
+      "textSample": "CardSense 計算機 推薦 卡片目錄 連線中 Card Calculator Start with a merchant or spending scenario, then compare the best cards side by side. 消費金額 NT$ 1,200 7 8 9 4 5 6 1 2 3 0 C 500 1K 3K 5K Merchant-first entry Ask questions like \"Which card should I use at Pxmart?\" by starting with the merchant first. Popular merchant shortcuts 全聯 家樂福 momo 蝦皮 Agoda 星巴克 Uber Eats Suggested merchants for this category Uber Eats foodpanda 星巴克 麥當勞 王品 饗賓餐旅 豆府餐飲 勝博殿 Cold Stone EZTABLE Smith & Wollensky 台中中山招待所 犇鐵板燒 乾杯燒肉 瓦城料理 爭鮮餐",
+      "consoleErrorsOrWarnings": [],
+      "failedRequests": [],
+      "screenshot": "D:\\Projects\\cardsense-workspace\\fleet-command\\reviews\\2026-05-03-post-merge-chrome\\calc-desktop.png"
+    },
+    {
+      "name": "home-mobile-375",
+      "url": "https://cardsense-web.vercel.app/",
+      "status": 200,
+      "elapsedMs": 9182,
+      "textLength": 2270,
+      "rootHtmlLength": 76566,
+      "title": "CardSense — 情境式信用卡推薦",
+      "textSample": "CardSense Card Calculator Start with a merchant or spending scenario, then compare the best cards side by side. 消費金額 NT$ 1,200 7 8 9 4 5 6 1 2 3 0 C 500 1K 3K 5K Merchant-first entry Ask questions like \"Which card should I use at Pxmart?\" by starting with the merchant first. Popular merchant shortcuts 全聯 家樂福 momo 蝦皮 Agoda 星巴克 Uber Eats Suggested merchants for this category Uber Eats foodpanda 星巴克 麥當勞 王品 饗賓餐旅 豆府餐飲 勝博殿 Cold Stone EZTABLE Smith & Wollensky 台中中山招待所 犇鐵板燒 乾杯燒肉 瓦城料理 爭鮮餐飲 鼎王餐飲 路易莎 85度C ",
+      "consoleErrorsOrWarnings": [],
+      "failedRequests": [],
+      "screenshot": "D:\\Projects\\cardsense-workspace\\fleet-command\\reviews\\2026-05-03-post-merge-chrome\\home-mobile-375.png"
+    },
+    {
+      "name": "calc-mobile-375",
+      "url": "https://cardsense-web.vercel.app/calc?amount=1000",
+      "status": 200,
+      "elapsedMs": 8665,
+      "textLength": 2270,
+      "rootHtmlLength": 76591,
+      "title": "CardSense — 情境式信用卡推薦",
+      "textSample": "CardSense Card Calculator Start with a merchant or spending scenario, then compare the best cards side by side. 消費金額 NT$ 1,200 7 8 9 4 5 6 1 2 3 0 C 500 1K 3K 5K Merchant-first entry Ask questions like \"Which card should I use at Pxmart?\" by starting with the merchant first. Popular merchant shortcuts 全聯 家樂福 momo 蝦皮 Agoda 星巴克 Uber Eats Suggested merchants for this category Uber Eats foodpanda 星巴克 麥當勞 王品 饗賓餐旅 豆府餐飲 勝博殿 Cold Stone EZTABLE Smith & Wollensky 台中中山招待所 犇鐵板燒 乾杯燒肉 瓦城料理 爭鮮餐飲 鼎王餐飲 路易莎 85度C ",
+      "consoleErrorsOrWarnings": [],
+      "failedRequests": [],
+      "screenshot": "D:\\Projects\\cardsense-workspace\\fleet-command\\reviews\\2026-05-03-post-merge-chrome\\calc-mobile-375.png"
+    }
+  ]
+}

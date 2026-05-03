@@ -1,0 +1,63 @@
+{
+  "ranAt": "2026-05-03T09:36:09.375Z",
+  "results": [
+    {
+      "name": "local-calc-desktop-after-cta-fix",
+      "status": 200,
+      "textLength": 1327,
+      "buttonMetrics": {
+        "buttonRect": {
+          "x": 207.5,
+          "y": 1663,
+          "width": 950,
+          "height": 44
+        },
+        "barRect": {
+          "x": 187.5,
+          "y": 1650,
+          "width": 990,
+          "height": 69
+        },
+        "barPosition": "static",
+        "barBottom": "0px",
+        "barZIndex": "auto"
+      },
+      "consoleMessages": [
+        "error: Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "error: Failed to load resource: net::ERR_CONNECTION_REFUSED",
+        "error: Failed to load resource: net::ERR_CONNECTION_REFUSED",
+        "error: Failed to load resource: net::ERR_CONNECTION_REFUSED"
+      ],
+      "screenshot": "D:\\Projects\\cardsense-workspace\\fleet-command\\reviews\\2026-05-03-post-merge-chrome\\local-calc-desktop-after-cta-fix.png"
+    },
+    {
+      "name": "local-calc-mobile-after-cta-fix",
+      "status": 200,
+      "textLength": 1312,
+      "buttonMetrics": {
+        "buttonRect": {
+          "x": 37,
+          "y": 756,
+          "width": 301,
+          "height": 44
+        },
+        "barRect": {
+          "x": 17,
+          "y": 743,
+          "width": 341,
+          "height": 69
+        },
+        "barPosition": "sticky",
+        "barBottom": "0px",
+        "barZIndex": "auto"
+      },
+      "consoleMessages": [
+        "error: Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "error: Failed to load resource: net::ERR_CONNECTION_REFUSED",
+        "error: Failed to load resource: net::ERR_CONNECTION_REFUSED",
+        "error: Failed to load resource: net::ERR_CONNECTION_REFUSED"
+      ],
+      "screenshot": "D:\\Projects\\cardsense-workspace\\fleet-command\\reviews\\2026-05-03-post-merge-chrome\\local-calc-mobile-after-cta-fix.png"
+    }
+  ]
+}
